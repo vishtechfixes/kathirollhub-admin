@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="../css/admin.css"/>
+  <style>
+    body { background: var(--bg); margin: 0; padding: 0; }
+    .page { padding: 24px 20px 60px; max-width: 960px; }
+
+    /* Tab bar */
+    .tab-bar {
+      display: flex; gap: 6px; flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    .tab-btn {
+      background: var(--card); border: 1.5px solid var(--border);
+      border-radius: var(--r-sm); padding: 8px 16px;
+      font-family: var(--font); font-size: 13px; font-weight: 700;
+      color: var(--txt2); cursor: pointer; transition: all .15s;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .tab-btn:hover { border-color: var(--blue); color: var(--blue); }
+    .tab-btn.on { background: var(--blue); border-color: var(--blue); color: #fff; }
+    .tab-count {
+      background: rgba(255,255,255,0.25); color: inherit;
+      font-size: 10px; font-weight: 800; padding: 2px 6px;
+      border-radius: 99px;
+    }
+    .tab-btn:not(.on) .tab-count { background: var(--bg); color: var(--txt3); }
+
+    /* Sections */
+    .sec-panel { display: none; }
+    .sec-panel.on { display: block; }
+
+    /* Pending task row */
+    .task-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px 18px; border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+    .task-row:last-child { border-bottom: none; }
+    .task-ava {
+      width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
+      background: var(--blue); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px; font-weight: 700;
+    }
+    .task-info { flex: 1; min-width: 120px; }
+    .task-name { font-size: 14px; font-weight: 700; color: var(--txt); }
+    .task-mob  { font-size: 12px; color: var(--txt3); }
+    .task-type {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 13px; font-weight: 600; color: var(--txt2);
+    }
+    .task-pts  { font-size: 13px; font-weight: 800; color: #ca8a04; white-space: nowrap; }
+    .task-acts { display: flex; gap: 7px; flex-shrink: 0; }
+
+    /* Alert cards */
+    .alert-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--r-lg); box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+    .alert-header {
+      padding: 14px 18px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .alert-header-title { font-size: 14px; font-weight: 700; color: var(--txt); display: flex; align-items: center; gap: 8px; }
+
+    /* Person row */
+    .person-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 18px; border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+    .person-row:last-child { border-bottom: none; }
+    .person-info { flex: 1; min-width: 120px; }
+    .person-name { font-size: 14px; font-weight: 700; color: var(--txt); }
+    .person-sub  { font-size: 12px; color: var(--txt3); margin-top: 2px; }
+    .person-acts { display: flex; gap: 7px; flex-shrink: 0; flex-wrap: wrap; }
+
+    /* Win-back composer */
+    .wb-compose {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--r-lg); padding: 20px;
+      box-shadow: var(--shadow-sm);
+    }
+    .wb-preview {
+      background: var(--bg); border: 1.5px solid var(--border);
+      border-radius: var(--r-md); padding: 14px;
+      font-size: 13px; color: var(--txt2); line-height: 1.7;
+      white-space: pre-wrap; margin-top: 12px; display: none;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      background: var(--txt); color: var(--card);
+      font-size: 13px; font-weight: 700; padding: 10px 20px;
+      border-radius: 99px; z-index: 999; opacity: 0; transition: opacity .3s;
+      white-space: nowrap;
+    }
+    .toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Summary -->
+  <div class="stat-grid" id="alert-stats" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:20px"></div>
+
+  <!-- Tab bar -->
+  <div class="tab-bar">
+    <button class="tab-btn on" id="tab-pending" onclick="switchTab('pending')">
+      ⏳ Pending Tasks <span class="tab-count" id="cnt-pending">0</span>
+    </button>
+    <button class="tab-btn" id="tab-bday" onclick="switchTab('bday')">
+      🎂 Birthdays <span class="tab-count" id="cnt-bday">0</span>
+    </button>
+    <button class="tab-btn" id="tab-inactive" onclick="switchTab('inactive')">
+      😴 Inactive <span class="tab-count" id="cnt-inactive">0</span>
+    </button>
+    <button class="tab-btn" id="tab-fraud" onclick="switchTab('fraud')">
+      ⚠️ Flagged <span class="tab-count" id="cnt-fraud">0</span>
+    </button>
+  </div>
+
+  <!-- ── PENDING SOCIAL TASKS ── -->
+  <div class="sec-panel on" id="sec-pending">
+    <div class="alert-card" style="margin-bottom:16px">
+      <div class="alert-header">
+        <div class="alert-header-title">📱 Social Tasks — Verification Pending</div>
+        <span style="font-size:12px;color:var(--txt3)">Approve karo → points milenge</span>
+      </div>
+      <div id="pending-list"></div>
+    </div>
+  </div>
+
+  <!-- ── BIRTHDAYS ── -->
+  <div class="sec-panel" id="sec-bday">
+    <div class="alert-card" style="margin-bottom:16px">
+      <div class="alert-header">
+        <div class="alert-header-title">🎂 Upcoming Birthdays — 7 din</div>
+        <button class="btn btn-ghost btn-sm" onclick="sendBdayAll()">📲 Sab ko WA Bhejo</button>
+      </div>
+      <div id="bday-list"></div>
+    </div>
+  </div>
+
+  <!-- ── INACTIVE ── -->
+  <div class="sec-panel" id="sec-inactive">
+    <div class="wb-compose" style="margin-bottom:16px">
+      <div style="font-size:15px;font-weight:700;color:var(--txt);margin-bottom:14px">💌 Win-Back Offer Composer</div>
+      <div class="row2" style="margin-bottom:12px">
+        <div class="field">
+          <label class="lbl">Inactive After (days)</label>
+          <input class="inp inp-sm" type="number" id="wb-days" value="30" min="1"/>
+        </div>
+        <div class="field">
+          <label class="lbl">Offer Valid (days)</label>
+          <input class="inp inp-sm" type="number" id="wb-valid" value="7" min="1"/>
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:12px">
+        <label class="lbl">Offer (e.g. 20% off ya FREE Chai)</label>
+        <input class="inp inp-sm" type="text" id="wb-offer" placeholder="20% off ya FREE item..."/>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost" style="flex:1" onclick="previewWB()">👁️ Preview</button>
+        <button class="btn btn-success" style="flex:2" onclick="sendWBAll()">📲 Sab Inactive Ko Bhejo</button>
+      </div>
+      <div class="wb-preview" id="wb-preview"></div>
+    </div>
+    <div class="alert-card">
+      <div class="alert-header">
+        <div class="alert-header-title">😴 Inactive Customers</div>
+        <span style="font-size:12px;color:var(--txt3)" id="inactive-lbl"></span>
+      </div>
+      <div id="inactive-list"></div>
+    </div>
+  </div>
+
+  <!-- ── FRAUD ── -->
+  <div class="sec-panel" id="sec-fraud">
+    <div class="alert-card">
+      <div class="alert-header">
+        <div class="alert-header-title">⚠️ Flagged Customers</div>
+      </div>
+      <div id="fraud-list"></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+  import {
+    getAllUsers, getAllBills,
+    approveSocialTask, rejectSocialTask,
+    toggleFraud, fmtDate, daysSince
+  } from '../js/admin.js';
+
+  const TASK_PTS  = { insta:25, google:30, wa:20, zomato:20 };
+  const TASK_NAME = { insta:'Instagram Follow', google:'Google Review (5★)', wa:'WhatsApp', zomato:'Zomato Follow' };
+  const SHOP_WA   = JSON.parse(localStorage.getItem('krh_shop')||'{}').whatsapp || '91XXXXXXXXXX';
+  const SHOP_NAME = JSON.parse(localStorage.getItem('krh_shop')||'{}').name || 'Kathi Roll Hub';
+
+  let users=[], bills=[];
+
+  // ── INIT ─────────────────────────────────────────────────
+  async function init() {
+    [users, bills] = await Promise.all([getAllUsers(), getAllBills()]);
+    renderAll();
+    setInterval(async () => {
+      [users, bills] = await Promise.all([getAllUsers(), getAllBills()]);
+      renderAll();
+    }, 6000);
+  }
+
+  function renderAll() {
+    const pending  = getPending();
+    const bdays    = getBdays();
+    const inactive = getInactive();
+    const fraud    = users.filter(u=>u.fraudFlag);
+
+    // Counts
+    document.getElementById('cnt-pending').textContent  = pending.length;
+    document.getElementById('cnt-bday').textContent     = bdays.length;
+    document.getElementById('cnt-inactive').textContent = inactive.length;
+    document.getElementById('cnt-fraud').textContent    = fraud.length;
+
+    // Stats strip
+    document.getElementById('alert-stats').innerHTML = `
+      <div class="stat-card"><span class="sc-icon">⏳</span><div class="sc-val r">${pending.length}</div><div class="sc-lbl">Tasks Pending</div></div>
+      <div class="stat-card"><span class="sc-icon">🎂</span><div class="sc-val y">${bdays.length}</div><div class="sc-lbl">Upcoming Bdays</div></div>
+      <div class="stat-card"><span class="sc-icon">😴</span><div class="sc-val b">${inactive.length}</div><div class="sc-lbl">Inactive 30+</div></div>
+      <div class="stat-card"><span class="sc-icon">⚠️</span><div class="sc-val">${fraud.length}</div><div class="sc-lbl">Flagged</div></div>`;
+
+    renderPending(pending);
+    renderBdays(bdays);
+    renderInactive(inactive);
+    renderFraud(fraud);
+  }
+
+  // ── HELPERS ──────────────────────────────────────────────
+  function getPending() {
+    const rows = [];
+    users.forEach((u,ui) => {
+      const p = u.socialPending || {}, d = u.socialDone || {};
+      Object.keys(p).forEach(k => { if(p[k]&&!d[k]) rows.push({u,ui,k}); });
+    });
+    return rows;
+  }
+
+  function getBdays() {
+    const today = new Date();
+    return users.filter(u => {
+      if (!u.dob) return false;
+      const dob = new Date(u.dob);
+      const next = new Date(today.getFullYear(), dob.getMonth(), dob.getDate());
+      if (next < today) next.setFullYear(today.getFullYear()+1);
+      return Math.ceil((next-today)/864e5) <= 7;
+    }).map(u => {
+      const dob = new Date(u.dob);
+      const next = new Date(new Date().getFullYear(), dob.getMonth(), dob.getDate());
+      if (next < new Date()) next.setFullYear(new Date().getFullYear()+1);
+      const diff = Math.ceil((next-new Date())/864e5);
+      return { ...u, bdayDiff: diff };
+    }).sort((a,b)=>a.bdayDiff-b.bdayDiff);
+  }
+
+  function getInactive() {
+    const days = parseInt(document.getElementById('wb-days')?.value)||30;
+    return users.filter(u => {
+      const lb = bills.filter(b=>b.mobile===u.mobile)[0];
+      return !lb || daysSince(lb.time) >= days;
+    }).sort((a,b)=>{
+      const la=bills.filter(b=>b.mobile===a.mobile)[0];
+      const lb2=bills.filter(b=>b.mobile===b.mobile)[0];
+      return daysSince(la?.time||a.joined) - daysSince(lb2?.time||b.joined);
+    }).reverse();
+  }
+
+  // ── RENDER: PENDING ───────────────────────────────────────
+  function renderPending(pending) {
+    const el = document.getElementById('pending-list');
+    if (!pending.length) {
+      el.innerHTML='<div class="empty-state" style="padding:40px;text-align:center;color:var(--txt3)"><span style="font-size:32px;display:block;margin-bottom:10px">✅</span>Koi pending task nahi!</div>';
+      return;
+    }
+    el.innerHTML = pending.map(({u,ui,k}) => `
+      <div class="task-row">
+        <div class="task-ava">${u.name[0].toUpperCase()}</div>
+        <div class="task-info">
+          <div class="task-name">${u.name}</div>
+          <div class="task-mob">${u.mobile}</div>
+        </div>
+        <div class="task-type">
+          ${taskIcon(k)} ${TASK_NAME[k]||k}
+        </div>
+        <div class="task-pts">+${TASK_PTS[k]||0} pts</div>
+        <div class="task-acts">
+          <button class="btn btn-success btn-sm" onclick="doApprove('${u.mobile}','${k}')">✓ Approve</button>
+          <button class="btn btn-ghost btn-sm"   onclick="doReject('${u.mobile}','${k}')">✗ Reject</button>
+        </div>
+      </div>`).join('');
+  }
+
+  function taskIcon(k) {
+    return {insta:'📸',google:'⭐',wa:'💬',zomato:'🍽️'}[k]||'📋';
+  }
+
+  window.doApprove = async function(mobile, key) {
+    const r = await approveSocialTask(mobile, key);
+    showToast(r.success ? `✅ ${r.name} ko +${r.pts} pts approved!` : '❌ Error');
+    [users,bills]=await Promise.all([getAllUsers(),getAllBills()]); renderAll();
+  };
+
+  window.doReject = async function(mobile, key) {
+    if (!confirm('Reject karna chahte ho?')) return;
+    const r = await rejectSocialTask(mobile, key);
+    showToast(r.success ? '✅ Task rejected' : '❌ Error');
+    [users,bills]=await Promise.all([getAllUsers(),getAllBills()]); renderAll();
+  };
+
+  // ── RENDER: BIRTHDAYS ─────────────────────────────────────
+  function renderBdays(bdays) {
+    const el = document.getElementById('bday-list');
+    if (!bdays.length) {
+      el.innerHTML='<div style="padding:32px;text-align:center;color:var(--txt3)">Is hafte koi birthday nahi 🎉</div>';
+      return;
+    }
+    el.innerHTML = bdays.map(u => {
+      const label = u.bdayDiff===0 ? '🎂 Aaj!' : `${u.bdayDiff} din baad`;
+      const color = u.bdayDiff===0 ? 'var(--red)' : u.bdayDiff<=3 ? '#ca8a04' : 'var(--txt2)';
+      return `<div class="person-row">
+        <div class="task-ava" style="background:#dc2626">${u.name[0].toUpperCase()}</div>
+        <div class="person-info">
+          <div class="person-name">${u.name}</div>
+          <div class="person-sub">${u.mobile} · DOB: ${fmtDate(u.dob)}</div>
+        </div>
+        <span style="font-size:13px;font-weight:800;color:${color}">${label}</span>
+        <div class="person-acts">
+          <button class="btn btn-ghost btn-sm" onclick="sendBdayWA('${u.mobile}','${u.name}')">📲 WA</button>
+          ${u.bdayDiff===0 ? '<span class="badge badge-red">Today! 🎂</span>' : ''}
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  window.sendBdayWA = function(mobile, name) {
+    const msg = encodeURIComponent(
+      `🎂 Happy Birthday ${name} ji!\n\n${SHOP_NAME} ki taraf se special birthday gift:\n🎁 FREE Roll ya Momos + 15% off poore order pe!\n\nAaj aa ke enjoy karo 😊\nDhanyawaad aur bahut sari shubhkamnayein! 🎉`
+    );
+    window.open(`https://wa.me/${mobile}?text=${msg}`, '_blank');
+  };
+
+  window.sendBdayAll = function() {
+    const bdays = getBdays();
+    if (!bdays.length) { showToast('Koi birthday nahi this week'); return; }
+    bdays.forEach((u,i) => setTimeout(() => sendBdayWA(u.mobile, u.name), i*800));
+    showToast(`📲 ${bdays.length} customers ko birthday WA bheja!`);
+  };
+
+  // ── RENDER: INACTIVE ──────────────────────────────────────
+  function renderInactive(inactive) {
+    document.getElementById('inactive-lbl').textContent = `${inactive.length} customers`;
+    const el = document.getElementById('inactive-list');
+    if (!inactive.length) {
+      el.innerHTML='<div style="padding:32px;text-align:center;color:var(--txt3)">Sab customers active hain 👍</div>';
+      return;
+    }
+    el.innerHTML = inactive.slice(0,15).map(u => {
+      const lb   = bills.filter(b=>b.mobile===u.mobile)[0];
+      const last = lb ? `${daysSince(lb.time)} din pehle` : 'Kabhi nahi aaya';
+      return `<div class="person-row">
+        <div class="task-ava" style="background:#64748b">${u.name[0].toUpperCase()}</div>
+        <div class="person-info">
+          <div class="person-name">${u.name}</div>
+          <div class="person-sub">${u.mobile} · Last visit: ${last}</div>
+        </div>
+        <div class="person-acts">
+          <button class="btn btn-ghost btn-sm" onclick="sendInactiveWA('${u.mobile}','${u.name}')">📲 WA</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  window.previewWB = function() {
+    const offer = document.getElementById('wb-offer').value || 'special offer';
+    const valid = document.getElementById('wb-valid').value || 7;
+    const msg   = `Yaar! ${SHOP_NAME} mein tumhe miss kar rahe hain 🌯\n\nBas kuch din se nahi aaye — toh tumhare liye special hai:\n⭐ ${offer} — sirf agle ${valid} din ke liye!\n\nCounter pe batao — discount turant milega!\nDhanyawaad 😊`;
+    const prev  = document.getElementById('wb-preview');
+    prev.textContent = msg; prev.style.display='block';
+  };
+
+  window.sendInactiveWA = function(mobile, name) {
+    const offer = document.getElementById('wb-offer')?.value || 'special offer';
+    const valid = document.getElementById('wb-valid')?.value || 7;
+    const msg   = encodeURIComponent(
+      `Hi ${name} ji! ${SHOP_NAME} mein tumhe miss kar rahe hain 🌯\n\nSpecial offer: ${offer} — ${valid} din ke liye!\nCounter pe batao! Intezaar kar rahe hain 😊`
+    );
+    window.open(`https://wa.me/${mobile}?text=${msg}`, '_blank');
+  };
+
+  window.sendWBAll = function() {
+    const inactive = getInactive();
+    if (!inactive.length) { showToast('Koi inactive customer nahi'); return; }
+    inactive.slice(0,1).forEach(u => sendInactiveWA(u.mobile, u.name));
+    showToast(`✅ Win-back offer ${inactive.length} customers ke liye ready! WA ek ek bhejo.`);
+  };
+
+  // ── RENDER: FRAUD ─────────────────────────────────────────
+  function renderFraud(fraud) {
+    const el = document.getElementById('fraud-list');
+    if (!fraud.length) {
+      el.innerHTML='<div style="padding:32px;text-align:center;color:var(--txt3)">Koi flagged customer nahi ✅</div>';
+      return;
+    }
+    el.innerHTML = fraud.map(u => `
+      <div class="person-row">
+        <div class="task-ava" style="background:#dc2626">${u.name[0].toUpperCase()}</div>
+        <div class="person-info">
+          <div class="person-name">⚠️ ${u.name}</div>
+          <div class="person-sub">${u.mobile} · Joined: ${fmtDate(u.joined)}</div>
+        </div>
+        <div class="person-acts">
+          <button class="btn btn-ghost btn-sm" onclick="doUnflag('${u.mobile}')">✓ Unflag</button>
+        </div>
+      </div>`).join('');
+  }
+
+  window.doUnflag = async function(mobile) {
+    await toggleFraud(mobile);
+    showToast('✅ Customer unflagged');
+    [users,bills]=await Promise.all([getAllUsers(),getAllBills()]); renderAll();
+  };
+
+  // ── TAB SWITCH ────────────────────────────────────────────
+  window.switchTab = function(name) {
+    ['pending','bday','inactive','fraud'].forEach(t=>{
+      document.getElementById('tab-'+t).classList.toggle('on', t===name);
+      document.getElementById('sec-'+t).classList.toggle('on', t===name);
+    });
+    if (name==='inactive') renderInactive(getInactive());
+  };
+
+  // ── TOAST ─────────────────────────────────────────────────
+  function showToast(msg, dur=2800) {
+    const t=document.getElementById('toast');
+    t.textContent=msg; t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'),dur);
+  }
+
+  init();
+</script>
+</body>
+</html>

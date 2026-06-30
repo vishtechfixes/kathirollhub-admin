@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="../css/admin.css"/>
+  <style>
+    body { background: var(--bg); margin: 0; padding: 0; }
+    .page { padding: 24px 20px 80px; max-width: 960px; }
+
+    /* ── Page header ── */
+    .page-header {
+      display: flex; align-items: flex-start;
+      justify-content: space-between;
+      flex-wrap: wrap; gap: 12px; margin-bottom: 20px;
+    }
+    .page-title { font-size: 20px; font-weight: 800; color: var(--txt); }
+    .page-sub   { font-size: 13px; color: var(--txt2); margin-top: 3px; }
+
+    /* ── Stat strip ── */
+    .stat-strip {
+      display: grid; grid-template-columns: repeat(4,1fr);
+      gap: 10px; margin-bottom: 20px;
+    }
+    @media(max-width:600px){ .stat-strip { grid-template-columns: repeat(2,1fr); } }
+    .ss {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--r-lg); padding: 14px 16px;
+      box-shadow: var(--shadow-sm); position: relative; overflow: hidden;
+    }
+    .ss-accent { position:absolute;top:0;left:0;right:0;height:3px;border-radius:4px 4px 0 0; }
+    .ss-icon   { font-size:20px;margin-bottom:8px;display:block; }
+    .ss-val    { font-size:26px;font-weight:800;color:var(--txt);line-height:1;margin-bottom:4px; }
+    .ss-val.g  { color:var(--green); }
+    .ss-val.r  { color:var(--red); }
+    .ss-val.b  { color:var(--blue); }
+    .ss-val.y  { color:#ca8a04; }
+    .ss-lbl    { font-size:12px;color:var(--txt2);font-weight:600; }
+
+    /* ── Manual Adjust Card ── */
+    .adjust-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--r-lg); padding: 18px 20px;
+      box-shadow: var(--shadow-sm); margin-bottom: 20px;
+    }
+    .adjust-title {
+      font-size: 14px; font-weight: 700; color: var(--txt);
+      margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
+    }
+    .pts-type-row { display:flex;gap:8px;margin-bottom:14px; }
+    .pts-type-btn {
+      flex:1;padding:9px 6px;border:1.5px solid var(--border);
+      border-radius:var(--r-sm);background:var(--bg);
+      font-family:var(--font);font-size:13px;font-weight:700;
+      color:var(--txt2);cursor:pointer;transition:all .15s;text-align:center;
+    }
+    .pts-type-btn.add  { border-color:var(--green);background:#f0fdf4;color:#166534; }
+    .pts-type-btn.sub  { border-color:var(--red);background:#fff5f5;color:#991b1b; }
+
+    /* ── Filter bar ── */
+    .filter-bar {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--r-lg); padding: 14px 16px;
+      box-shadow: var(--shadow-sm); margin-bottom: 16px;
+      display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+    }
+    .search-wrap {
+      display:flex;align-items:center;gap:8px;
+      background:var(--bg);border:1px solid var(--border);
+      border-radius:var(--r-sm);padding:8px 12px;flex:1;min-width:200px;
+    }
+    .search-wrap input {
+      background:none;border:none;outline:none;
+      font-family:var(--font);font-size:13px;color:var(--txt);width:100%;
+    }
+    .filter-sel {
+      background:var(--bg);border:1px solid var(--border);
+      border-radius:var(--r-sm);color:var(--txt);
+      font-family:var(--font);font-size:13px;font-weight:600;
+      padding:8px 12px;outline:none;cursor:pointer;
+    }
+    .date-inp {
+      background:var(--bg);border:1px solid var(--border);
+      border-radius:var(--r-sm);color:var(--txt);
+      font-family:var(--font);font-size:13px;padding:8px 12px;outline:none;
+    }
+
+    /* ── Table card ── */
+    .tbl-card {
+      background:var(--card);border:1px solid var(--border);
+      border-radius:var(--r-lg);box-shadow:var(--shadow-sm);overflow:hidden;
+    }
+    .tbl-hdr {
+      padding:14px 20px;border-bottom:1px solid var(--border);
+      display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;
+    }
+    .tbl-hdr-left { font-size:14px;font-weight:700;color:var(--txt); }
+    .tbl-sub      { font-size:12px;color:var(--txt3);font-weight:600; }
+
+    /* Points amount badge */
+    .pts-badge {
+      display:inline-flex;align-items:center;gap:4px;
+      font-size:13px;font-weight:800;padding:3px 10px;border-radius:99px;
+      white-space:nowrap;
+    }
+    .pts-badge.pos { background:#dcfce7;color:#166534; }
+    .pts-badge.neg { background:#fee2e2;color:#991b1b; }
+
+    /* Reason tag */
+    .reason-tag {
+      display:inline-flex;align-items:center;gap:5px;
+      font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;
+      white-space:nowrap;
+    }
+
+    /* Avatar */
+    .cust-ava {
+      width:32px;height:32px;border-radius:50%;
+      display:flex;align-items:center;justify-content:center;
+      font-size:13px;font-weight:800;color:#fff;flex-shrink:0;
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align:center;padding:48px 24px;color:var(--txt2);
+    }
+    .empty-state .ei { font-size:40px;display:block;margin-bottom:12px; }
+
+    /* Toast */
+    .toast {
+      position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+      background:var(--txt);color:var(--card);
+      font-size:13px;font-weight:700;padding:10px 20px;
+      border-radius:99px;z-index:999;opacity:0;transition:opacity .3s;
+      white-space:nowrap;pointer-events:none;
+    }
+    .toast.show { opacity:1; }
+
+    /* Adjust modal */
+    .modal-bg {
+      position:fixed;inset:0;background:rgba(0,0,0,.45);
+      z-index:500;display:none;align-items:center;justify-content:center;padding:16px;
+    }
+    .modal-bg.open { display:flex; }
+    .modal-box {
+      background:var(--card);border-radius:var(--r-xl);
+      padding:26px 22px;width:100%;max-width:420px;
+      box-shadow:0 20px 60px rgba(0,0,0,.2);animation:pop .2s ease;
+    }
+    @keyframes pop{from{transform:scale(.95);opacity:0}to{transform:scale(1);opacity:1}}
+    .modal-title { font-size:17px;font-weight:800;color:var(--txt);margin-bottom:6px; }
+    .modal-sub   { font-size:13px;color:var(--txt2);margin-bottom:18px; }
+    .modal-footer{ display:flex;gap:10px;margin-top:18px; }
+
+    /* Pagination */
+    .pagination {
+      display:flex;align-items:center;justify-content:center;gap:8px;
+      padding:16px;border-top:1px solid var(--border);
+    }
+    .pg-btn {
+      padding:7px 14px;border:1.5px solid var(--border);border-radius:var(--r-sm);
+      background:var(--bg);font-family:var(--font);font-size:13px;font-weight:700;
+      color:var(--txt2);cursor:pointer;transition:all .15s;
+    }
+    .pg-btn.on { background:var(--blue);border-color:var(--blue);color:#fff; }
+    .pg-btn:hover:not(.on) { border-color:var(--blue);color:var(--blue); }
+    .pg-info { font-size:13px;color:var(--txt3);font-weight:600; }
+
+    @media(max-width:640px){ .hide-sm { display:none !important; } }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ── Page header ── -->
+  <div class="page-header">
+    <div>
+      <div class="page-title">⭐ Points Ledger</div>
+      <div class="page-sub">Har customer ka points history — kab mila, kyu mila, kitna mila.</div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-ghost" onclick="loadPage()">↻ Refresh</button>
+      <button class="btn btn-yellow" onclick="openAdjustModal()">⚙️ Manual Adjust</button>
+    </div>
+  </div>
+
+  <!-- ── Stats ── -->
+  <div class="stat-strip">
+    <div class="ss">
+      <div class="ss-accent" style="background:var(--blue)"></div>
+      <span class="ss-icon">📋</span>
+      <div class="ss-val b" id="s-total">—</div>
+      <div class="ss-lbl">Total Transactions</div>
+    </div>
+    <div class="ss">
+      <div class="ss-accent" style="background:var(--green)"></div>
+      <span class="ss-icon">➕</span>
+      <div class="ss-val g" id="s-earned">—</div>
+      <div class="ss-lbl">Total Points Earned</div>
+    </div>
+    <div class="ss">
+      <div class="ss-accent" style="background:var(--red)"></div>
+      <span class="ss-icon">➖</span>
+      <div class="ss-val r" id="s-spent">—</div>
+      <div class="ss-lbl">Total Points Deducted</div>
+    </div>
+    <div class="ss">
+      <div class="ss-accent" style="background:#ca8a04"></div>
+      <span class="ss-icon">👥</span>
+      <div class="ss-val y" id="s-customers">—</div>
+      <div class="ss-lbl">Unique Customers</div>
+    </div>
+  </div>
+
+  <!-- ── Manual Adjust ── -->
+  <div class="adjust-card">
+    <div class="adjust-title">⚙️ Quick Manual Points Adjustment</div>
+    <div class="row3" style="margin-bottom:12px">
+      <div class="field">
+        <label class="lbl">Customer Mobile <span style="color:var(--red)">*</span></label>
+        <input class="inp inp-sm" type="tel" id="adj-mob" maxlength="10"
+          placeholder="10-digit mobile" inputmode="numeric"
+          oninput="searchCustQuick()"/>
+        <div id="adj-cust-info" style="font-size:12px;color:var(--txt2);margin-top:5px;font-weight:600"></div>
+      </div>
+      <div class="field">
+        <label class="lbl">Points <span style="color:var(--red)">*</span></label>
+        <input class="inp inp-sm" type="number" id="adj-pts" min="1" placeholder="e.g. 50"/>
+      </div>
+      <div class="field">
+        <label class="lbl">Type</label>
+        <select class="inp inp-sm" id="adj-type">
+          <option value="add">➕ Add Points</option>
+          <option value="sub">➖ Deduct Points</option>
+        </select>
+      </div>
+    </div>
+    <div class="field" style="margin-bottom:12px">
+      <label class="lbl">Reason <span style="color:var(--red)">*</span></label>
+      <input class="inp" type="text" id="adj-reason"
+        placeholder="e.g. Compensation, Special event, Correction"/>
+    </div>
+    <div class="msg-err" id="adj-err" style="margin-bottom:8px"></div>
+    <button class="btn btn-yellow" id="adj-btn" onclick="doAdjust()">
+      ⚡ Apply Points
+    </button>
+  </div>
+
+  <!-- ── Filter bar ── -->
+  <div class="filter-bar">
+    <div class="search-wrap" style="flex:2">
+      <span style="color:var(--txt3)">🔍</span>
+      <input type="text" id="search-inp" placeholder="Mobile ya naam search karo..."
+        oninput="applyFilters()"/>
+    </div>
+    <select class="filter-sel" id="reason-filter" onchange="applyFilters()">
+      <option value="">Sab Reasons</option>
+      <option value="Visit">🔥 Visit Bonus</option>
+      <option value="Referral">🔗 Referral</option>
+      <option value="Social">📱 Social Task</option>
+      <option value="Manual">✋ Manual</option>
+      <option value="Welcome">🆕 Welcome</option>
+      <option value="Birthday">🎂 Birthday</option>
+    </select>
+    <select class="filter-sel" id="type-filter" onchange="applyFilters()">
+      <option value="">Add + Deduct</option>
+      <option value="pos">➕ Added only</option>
+      <option value="neg">➖ Deducted only</option>
+    </select>
+    <input class="date-inp" type="date" id="date-filter" onchange="applyFilters()"
+      title="Filter by date"/>
+  </div>
+
+  <!-- ── Ledger table ── -->
+  <div class="tbl-card">
+    <div class="tbl-hdr">
+      <div class="tbl-hdr-left">📋 Points History</div>
+      <div class="tbl-sub" id="tbl-sub">Loading...</div>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Customer</th>
+            <th>Points</th>
+            <th>Reason</th>
+            <th class="hide-sm">Date & Time</th>
+            <th class="hide-sm">Running Balance</th>
+          </tr>
+        </thead>
+        <tbody id="ledger-tbody"></tbody>
+      </table>
+      <div class="empty-state" id="ledger-empty" style="display:none">
+        <span class="ei">⭐</span>
+        <div style="font-size:15px;font-weight:700;color:var(--txt);margin-bottom:6px">Koi points history nahi</div>
+        <p>Jab customers visit karenge ya tasks complete karenge, yahan dikhega.</p>
+      </div>
+    </div>
+    <!-- Pagination -->
+    <div class="pagination" id="pagination"></div>
+  </div>
+
+</div><!-- /page -->
+
+<!-- ── Manual Adjust Modal ── -->
+<div class="modal-bg" id="adj-modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box">
+    <div class="modal-title">⚙️ Manual Points Adjust</div>
+    <div class="modal-sub">Customer ke account mein directly points add ya deduct karo.</div>
+
+    <div class="field" style="margin-bottom:12px">
+      <label class="lbl">Customer Mobile <span style="color:var(--red)">*</span></label>
+      <input class="inp" type="tel" id="m-mob" maxlength="10" placeholder="10-digit mobile"
+        oninput="searchCustModal()"/>
+      <div id="m-cust-info" style="font-size:12px;margin-top:5px;font-weight:600;color:var(--txt2)"></div>
+    </div>
+
+    <div class="row2" style="margin-bottom:12px">
+      <div class="field">
+        <label class="lbl">Points Amount <span style="color:var(--red)">*</span></label>
+        <input class="inp inp-sm" type="number" id="m-pts" min="1" placeholder="50"/>
+      </div>
+      <div class="field">
+        <label class="lbl">Action</label>
+        <div style="display:flex;gap:8px;margin-top:6px">
+          <button class="pts-type-btn add" id="m-add-btn" onclick="setAction('add')">➕ Add</button>
+          <button class="pts-type-btn" id="m-sub-btn" onclick="setAction('sub')">➖ Deduct</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="field" style="margin-bottom:4px">
+      <label class="lbl">Reason <span style="color:var(--red)">*</span></label>
+      <input class="inp" type="text" id="m-reason"
+        placeholder="e.g. Birthday surprise, Correction, Event bonus"/>
+    </div>
+
+    <div class="msg-err" id="m-err" style="margin-top:10px"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" style="flex:1" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-success" style="flex:2" id="m-btn" onclick="doModalAdjust()">
+        ✅ Apply
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+  import {
+    getAllUsers, getUser, adjustPoints,
+    fmtDate, fmtTime
+  } from '../js/admin.js';
+
+  // ── State ──────────────────────────────────────────────
+  let allHistory = [];   // raw from LS
+  let filtered   = [];
+  let curPage    = 1;
+  const PER_PAGE = 25;
+  let modalAction = 'add';
+
+  // ── LOAD ───────────────────────────────────────────────
+  window.loadPage = async function() {
+    // Points history from LS
+    allHistory = JSON.parse(localStorage.getItem('krh_pts_history') || '[]');
+
+    // Also build from user visit data if history is sparse
+    if (allHistory.length < 5) {
+      const users = await getAllUsers();
+      const synthetic = [];
+      users.forEach(u => {
+        if (u.points > 0) {
+          synthetic.push({
+            mobile: u.mobile,
+            name:   u.name,
+            amount: u.points,
+            reason: 'Total points (from profile)',
+            time:   u.joined || new Date().toISOString(),
+          });
+        }
+      });
+      if (synthetic.length) {
+        allHistory = [...allHistory, ...synthetic];
+      }
+    }
+
+    // Sort newest first
+    allHistory.sort((a,b) => new Date(b.time) - new Date(a.time));
+
+    renderStats();
+    applyFilters();
+  };
+
+  loadPage();
+
+  // ── STATS ──────────────────────────────────────────────
+  function renderStats() {
+    const total    = allHistory.length;
+    const earned   = allHistory.filter(h => h.amount > 0).reduce((a,h) => a + h.amount, 0);
+    const spent    = allHistory.filter(h => h.amount < 0).reduce((a,h) => a + Math.abs(h.amount), 0);
+    const uniqCust = new Set(allHistory.map(h => h.mobile)).size;
+    setText('s-total',     total);
+    setText('s-earned',    '+' + earned);
+    setText('s-spent',     '-' + spent);
+    setText('s-customers', uniqCust);
+  }
+
+  // ── FILTER ─────────────────────────────────────────────
+  window.applyFilters = function() {
+    const q      = (document.getElementById('search-inp').value || '').toLowerCase();
+    const reason = document.getElementById('reason-filter').value;
+    const type   = document.getElementById('type-filter').value;
+    const date   = document.getElementById('date-filter').value;
+
+    filtered = allHistory.filter(h => {
+      if (q && !((h.mobile||'').includes(q) || (h.name||'').toLowerCase().includes(q))) return false;
+      if (reason && !(h.reason||'').includes(reason)) return false;
+      if (type === 'pos' && h.amount <= 0) return false;
+      if (type === 'neg' && h.amount >= 0) return false;
+      if (date) {
+        const hDate = new Date(h.time).toISOString().slice(0,10);
+        if (hDate !== date) return false;
+      }
+      return true;
+    });
+
+    curPage = 1;
+    renderTable();
+    renderPagination();
+  };
+
+  // ── TABLE ──────────────────────────────────────────────
+  function renderTable() {
+    const tbody = document.getElementById('ledger-tbody');
+    const empty = document.getElementById('ledger-empty');
+    const start = (curPage-1) * PER_PAGE;
+    const page  = filtered.slice(start, start + PER_PAGE);
+
+    document.getElementById('tbl-sub').textContent =
+      filtered.length + ' transactions' + (filtered.length !== allHistory.length ? ' (filtered)' : '');
+
+    if (!filtered.length) {
+      tbody.innerHTML = '';
+      empty.style.display = 'block';
+      return;
+    }
+    empty.style.display = 'none';
+
+    // Build running balances per customer
+    const balMap = {};
+
+    tbody.innerHTML = page.map(h => {
+      const isPos  = h.amount > 0;
+      const mob    = h.mobile || '';
+      balMap[mob]  = (balMap[mob] || 0) + h.amount;
+      const bal    = balMap[mob];
+      const color  = stringToColor(mob || 'guest');
+      const initl  = (h.name || 'G')[0].toUpperCase();
+      const reason = h.reason || 'Manual';
+      const rtag   = reasonTag(reason);
+      const dt     = h.time ? new Date(h.time) : null;
+      const dateStr= dt ? dt.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'2-digit'}) : '—';
+      const timeStr= dt ? dt.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}) : '';
+
+      return `
+        <tr>
+          <td>
+            <div style="display:flex;align-items:center;gap:10px">
+              <div class="cust-ava" style="background:${color}">${initl}</div>
+              <div>
+                <div style="font-size:13px;font-weight:700;color:var(--txt)">${h.name || 'Unknown'}</div>
+                <div style="font-size:11px;color:var(--txt3)">${mob}</div>
+              </div>
+            </div>
+          </td>
+          <td>
+            <span class="pts-badge ${isPos ? 'pos' : 'neg'}">
+              ${isPos ? '+' : ''}${h.amount} pts
+            </span>
+          </td>
+          <td>${rtag}</td>
+          <td class="hide-sm" style="font-size:12px;color:var(--txt2)">
+            ${dateStr}<br/>
+            <span style="color:var(--txt3)">${timeStr}</span>
+          </td>
+          <td class="hide-sm">
+            <span style="font-size:13px;font-weight:700;color:${bal>=0?'var(--green)':'var(--red)'}">
+              ${bal >= 0 ? '+' : ''}${bal} pts
+            </span>
+          </td>
+        </tr>`;
+    }).join('');
+  }
+
+  // ── PAGINATION ─────────────────────────────────────────
+  function renderPagination() {
+    const total = Math.ceil(filtered.length / PER_PAGE);
+    const el    = document.getElementById('pagination');
+    if (total <= 1) { el.innerHTML = ''; return; }
+
+    let html = '';
+    if (curPage > 1) html += `<button class="pg-btn" onclick="goPage(${curPage-1})">← Prev</button>`;
+    html += `<span class="pg-info">Page ${curPage} / ${total}</span>`;
+    if (curPage < total) html += `<button class="pg-btn" onclick="goPage(${curPage+1})">Next →</button>`;
+    el.innerHTML = html;
+  }
+
+  window.goPage = function(p) { curPage = p; renderTable(); renderPagination(); window.scrollTo(0,0); };
+
+  // ── QUICK ADJUST (inline card) ─────────────────────────
+  let quickCust = null;
+
+  window.searchCustQuick = async function() {
+    const mob = (document.getElementById('adj-mob').value || '').trim();
+    const info = document.getElementById('adj-cust-info');
+    if (mob.length === 10 && /^\d{10}$/.test(mob)) {
+      const user = await getUser(mob);
+      if (user) {
+        quickCust = user;
+        info.innerHTML = `✅ <strong>${user.name}</strong> — ${user.points||0} pts`;
+        info.style.color = 'var(--green)';
+      } else {
+        quickCust = null;
+        info.textContent = '❌ Customer nahi mila';
+        info.style.color = 'var(--red)';
+      }
+    } else {
+      quickCust = null;
+      info.textContent = '';
+    }
+  };
+
+  window.doAdjust = async function() {
+    const errEl  = document.getElementById('adj-err');
+    errEl.style.display = 'none';
+
+    const mob    = (document.getElementById('adj-mob').value||'').trim();
+    const pts    = parseInt(document.getElementById('adj-pts').value)||0;
+    const type   = document.getElementById('adj-type').value;
+    const reason = (document.getElementById('adj-reason').value||'').trim();
+
+    if (!mob || mob.length !== 10) { showErr('adj-err', 'Valid 10-digit mobile daalo'); return; }
+    if (!pts || pts <= 0)          { showErr('adj-err', 'Points amount daalo (> 0)');   return; }
+    if (!reason)                   { showErr('adj-err', 'Reason zaroor daalo');          return; }
+
+    const finalAmt = type === 'sub' ? -pts : pts;
+    const btn = document.getElementById('adj-btn');
+    btn.disabled = true; btn.textContent = '⏳ Applying...';
+
+    const result = await adjustPoints(mob, finalAmt, 'Manual: ' + reason);
+    if (result.success) {
+      showToast((finalAmt > 0 ? '✅ +' : '✅ ') + finalAmt + ' pts applied to ' + result.name);
+      document.getElementById('adj-mob').value    = '';
+      document.getElementById('adj-pts').value    = '';
+      document.getElementById('adj-reason').value = '';
+      document.getElementById('adj-cust-info').textContent = '';
+      quickCust = null;
+      await loadPage();
+    } else {
+      showErr('adj-err', result.message || 'Customer nahi mila');
+    }
+    btn.disabled = false; btn.textContent = '⚡ Apply Points';
+  };
+
+  // ── MODAL ADJUST ───────────────────────────────────────
+  let modalCust = null;
+
+  window.openAdjustModal = function() {
+    document.getElementById('m-mob').value    = '';
+    document.getElementById('m-pts').value    = '';
+    document.getElementById('m-reason').value = '';
+    document.getElementById('m-cust-info').textContent = '';
+    document.getElementById('m-err').style.display = 'none';
+    setAction('add');
+    document.getElementById('adj-modal').classList.add('open');
+    setTimeout(() => document.getElementById('m-mob').focus(), 100);
+  };
+
+  window.closeModal = function() {
+    document.getElementById('adj-modal').classList.remove('open');
+  };
+
+  window.setAction = function(a) {
+    modalAction = a;
+    document.getElementById('m-add-btn').className = 'pts-type-btn' + (a==='add'?' add':'');
+    document.getElementById('m-sub-btn').className = 'pts-type-btn' + (a==='sub'?' sub':'');
+  };
+
+  window.searchCustModal = async function() {
+    const mob  = (document.getElementById('m-mob').value||'').trim();
+    const info = document.getElementById('m-cust-info');
+    if (mob.length === 10 && /^\d{10}$/.test(mob)) {
+      const user = await getUser(mob);
+      if (user) {
+        modalCust = user;
+        info.innerHTML = `✅ <strong>${user.name}</strong> — Current: ${user.points||0} pts`;
+        info.style.color = 'var(--green)';
+      } else {
+        modalCust = null;
+        info.textContent = '❌ Customer nahi mila';
+        info.style.color = 'var(--red)';
+      }
+    } else { modalCust = null; info.textContent = ''; }
+  };
+
+  window.doModalAdjust = async function() {
+    document.getElementById('m-err').style.display = 'none';
+    const mob    = (document.getElementById('m-mob').value||'').trim();
+    const pts    = parseInt(document.getElementById('m-pts').value)||0;
+    const reason = (document.getElementById('m-reason').value||'').trim();
+
+    if (!mob || mob.length!==10) { showErr('m-err','Valid mobile daalo'); return; }
+    if (!pts || pts<=0)          { showErr('m-err','Points amount daalo'); return; }
+    if (!reason)                 { showErr('m-err','Reason zaroor daalo'); return; }
+
+    const finalAmt = modalAction === 'sub' ? -pts : pts;
+    const btn = document.getElementById('m-btn');
+    btn.disabled = true; btn.textContent = '⏳ Applying...';
+
+    const result = await adjustPoints(mob, finalAmt, 'Manual: ' + reason);
+    if (result.success) {
+      showToast((finalAmt>0?'✅ +':'✅ ') + finalAmt + ' pts — ' + result.name);
+      closeModal();
+      await loadPage();
+    } else {
+      showErr('m-err', result.message||'Error hua');
+    }
+    btn.disabled = false; btn.textContent = '✅ Apply';
+  };
+
+  // ── HELPERS ────────────────────────────────────────────
+  function reasonTag(reason) {
+    const r = reason.toLowerCase();
+    let icon = '✋', bg = '#f1f5f9', color = '#475569', label = reason;
+    if (r.includes('visit'))    { icon='🔥';bg='#fff7ed';color='#c2410c';label='Visit Bonus'; }
+    if (r.includes('referral')) { icon='🔗';bg='#eff6ff';color='#1d4ed8';label='Referral'; }
+    if (r.includes('insta') || r.includes('google') || r.includes('social') || r.includes('whatsapp') || r.includes('zomato'))
+                                { icon='📱';bg='#fdf4ff';color='#7e22ce';label='Social Task'; }
+    if (r.includes('welcome'))  { icon='🆕';bg='#f0fdf4';color='#166534';label='Welcome'; }
+    if (r.includes('birthday')) { icon='🎂';bg='#fef9c3';color='#92400e';label='Birthday'; }
+    if (r.includes('manual') || r.includes('correction') || r.includes('compensation'))
+                                { icon='✋';bg='#f1f5f9';color='#475569';label='Manual'; }
+
+    return `<span class="reason-tag" style="background:${bg};color:${color}">${icon} ${label}</span>`;
+  }
+
+  function stringToColor(str) {
+    let hash = 0;
+    for (let i=0; i<str.length; i++) hash = str.charCodeAt(i) + ((hash<<5)-hash);
+    const colors = ['#3b82f6','#22c55e','#f97316','#ec4899','#8b5cf6','#06b6d4','#f59e0b','#ef4444'];
+    return colors[Math.abs(hash) % colors.length];
+  }
+
+  function setText(id, val) { const e=document.getElementById(id); if(e) e.textContent=val; }
+
+  function showErr(id, msg) {
+    const e = document.getElementById(id);
+    if (!e) return;
+    e.textContent = '❌ ' + msg;
+    e.style.display = 'block';
+  }
+
+  function showToast(msg, dur=2800) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), dur);
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"/>
+  <title>Admin Panel — Kathi Roll Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/admin.css"/>
+  <style>
+    /* ── LOGIN GATE ──────────────────────────────────── */
+    .gate-overlay {
+      position: fixed; inset: 0; z-index: 1000;
+      background: #0f172a;
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    .gate-card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 20px;
+      padding: 36px 28px;
+      width: 100%; max-width: 360px;
+      text-align: center;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.4);
+    }
+    .gate-logo {
+      width: 52px; height: 52px;
+      background: var(--yellow);
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px; margin: 0 auto 16px;
+    }
+    .gate-title  { font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 4px; }
+    .gate-sub    { font-size: 13px; color: #64748b; font-weight: 500; margin-bottom: 26px; }
+    .gate-label  { display: block; font-size: 12px; font-weight: 600; color: #94a3b8; text-align: left; margin-bottom: 7px; }
+    .gate-input  {
+      width: 100%; background: #0f172a; border: 1.5px solid #334155;
+      border-radius: 10px; color: #fff; font-family: var(--font);
+      font-size: 16px; padding: 13px 16px; outline: none;
+      letter-spacing: 3px; text-align: center; margin-bottom: 14px;
+      transition: border-color 0.15s;
+    }
+    .gate-input:focus { border-color: var(--blue); }
+    .gate-input::placeholder { letter-spacing: 0; color: #475569; font-size: 14px; }
+    .gate-btn {
+      width: 100%; background: var(--blue); color: #fff;
+      font-family: var(--font); font-size: 15px; font-weight: 700;
+      border: none; border-radius: 10px; padding: 14px;
+      cursor: pointer; transition: opacity 0.15s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .gate-btn:hover { opacity: 0.9; }
+    .gate-err {
+      font-size: 13px; font-weight: 600; color: var(--red);
+      background: #fee2e2; border-radius: 8px; padding: 9px 12px;
+      margin-top: 10px; display: none;
+    }
+    .gate-hint {
+      font-size: 11px; color: #475569; margin-top: 16px;
+      line-height: 1.6;
+    }
+
+    /* ── APP SHELL ─────────────────────────────────── */
+    .admin-app {
+      display: none; /* shown after login */
+    }
+    .admin-app.visible {
+      display: flex;
+      min-height: 100svh;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══ LOGIN GATE ══════════════════════════════════════════ -->
+<div class="gate-overlay" id="gate">
+  <div class="gate-card">
+    <div class="gate-logo">🌯</div>
+    <div class="gate-title">Admin Panel</div>
+    <div class="gate-sub">Kathi Roll Hub — Owner Access</div>
+
+    <label class="gate-label" for="gate-pass">Password</label>
+    <input
+      class="gate-input" type="password" id="gate-pass"
+      placeholder="Enter password"
+      onkeydown="if(event.key==='Enter') doLogin()"
+      autocomplete="current-password"
+    />
+    <button class="gate-btn" onclick="doLogin()">
+      🔐 Login Karein
+    </button>
+    <div class="gate-err" id="gate-err">❌ Wrong password. Try again.</div>
+    <div class="gate-hint">
+      Default password: <strong style="color:#94a3b8">admin123</strong><br/>
+      Settings se change kar sakte ho.
+    </div>
+  </div>
+</div>
+
+<!-- ══ MAIN APP SHELL ══════════════════════════════════════ -->
+<div class="admin-app" id="app">
+
+  <!-- ── SIDEBAR ── -->
+  <aside class="sidebar" id="sidebar">
+
+    <!-- Brand -->
+    <div class="sb-brand">
+      <div class="sb-brand-icon">🌯</div>
+      <div class="sb-brand-text">
+        <div class="sb-brand-name">KATHI ROLL HUB</div>
+        <div class="sb-brand-sub" id="sb-location">Murlipura, Jaipur</div>
+      </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="sb-nav">
+
+      <div class="sb-section-title">Main</div>
+
+      <button class="nav-item active" id="nav-dashboard"
+        onclick="loadPage('dashboard','📊 Dashboard')">
+        <span class="nav-icon">📊</span>
+        <span class="nav-label">Dashboard</span>
+      </button>
+
+      <button class="nav-item" id="nav-billing"
+        onclick="loadPage('billing','🧾 Bills / Counter')">
+        <span class="nav-icon">🧾</span>
+        <span class="nav-label">Bills / Counter</span>
+      </button>
+
+      <button class="nav-item" id="nav-bills-history"
+        onclick="loadPage('bills-history','📋 Bill History')">
+        <span class="nav-icon">📋</span>
+        <span class="nav-label">Bill History</span>
+      </button>
+
+      <div class="sb-section-title" style="margin-top:6px">Inventory</div>
+
+      <button class="nav-item" id="nav-menu"
+        onclick="loadPage('menu','🌯 Menu')">
+        <span class="nav-icon">🌯</span>
+        <span class="nav-label">Menu</span>
+      </button>
+
+      <button class="nav-item" id="nav-stock"
+        onclick="loadPage('stock','📦 Stock')">
+        <span class="nav-icon">📦</span>
+        <span class="nav-label">Stock</span>
+      </button>
+
+      <div class="sb-section-title" style="margin-top:6px">Customers</div>
+
+      <button class="nav-item" id="nav-customers"
+        onclick="loadPage('customers','👥 Customers')">
+        <span class="nav-icon">👥</span>
+        <span class="nav-label">Customers</span>
+      </button>
+
+      <button class="nav-item" id="nav-points"
+        onclick="loadPage('points','⭐ Points')">
+        <span class="nav-icon">⭐</span>
+        <span class="nav-label">Points</span>
+        <span class="nav-badge" id="badge-points" style="display:none">0</span>
+      </button>
+
+      <button class="nav-item" id="nav-referrals"
+        onclick="loadPage('referrals','🔗 Referrals')">
+        <span class="nav-icon">🔗</span>
+        <span class="nav-label">Referrals</span>
+      </button>
+
+      <div class="sb-section-title" style="margin-top:6px">Marketing</div>
+
+      <button class="nav-item" id="nav-rewards"
+        onclick="loadPage('rewards','🎁 Rewards / Offers')">
+        <span class="nav-icon">🎁</span>
+        <span class="nav-label">Rewards / Offers</span>
+      </button>
+
+      <button class="nav-item" id="nav-alerts"
+        onclick="loadPage('alerts','🚨 Alerts')">
+        <span class="nav-icon">🚨</span>
+        <span class="nav-label">Alerts</span>
+        <span class="nav-badge" id="badge-alerts" style="display:none">0</span>
+      </button>
+
+      <button class="nav-item" id="nav-feedback"
+        onclick="loadPage('feedback','💬 Help / Feedback')">
+        <span class="nav-icon">💬</span>
+        <span class="nav-label">Help / Feedback</span>
+        <span class="nav-badge" id="badge-feedback" style="display:none">0</span>
+      </button>
+
+      <div class="sb-section-title" style="margin-top:6px">System</div>
+
+      <button class="nav-item" id="nav-export"
+        onclick="loadPage('export','📥 Export')">
+        <span class="nav-icon">📥</span>
+        <span class="nav-label">Export</span>
+      </button>
+
+      <button class="nav-item" id="nav-settings"
+        onclick="loadPage('settings','⚙️ Settings')">
+        <span class="nav-icon">⚙️</span>
+        <span class="nav-label">Settings</span>
+      </button>
+
+    </nav>
+
+    <!-- User footer -->
+    <div class="sb-user">
+      <div class="sb-avatar">A</div>
+      <div class="sb-user-info">
+        <div class="sb-user-name">Admin</div>
+        <div class="sb-user-role" id="sb-role">Shop Owner</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Overlay for mobile -->
+  <div class="sb-overlay" id="sb-overlay" onclick="closeSidebar()"></div>
+
+  <!-- ── MAIN WRAPPER ── -->
+  <div class="main-wrapper" id="main-wrapper">
+
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <!-- Hamburger (mobile) -->
+        <button class="btn-hamburger" onclick="toggleMobileSidebar()">☰</button>
+        <!-- Collapse (desktop) -->
+        <button class="btn-toggle-sb" onclick="toggleSidebar()" title="Toggle sidebar">⬅</button>
+        <span class="topbar-title" id="topbar-title">📊 Dashboard</span>
+      </div>
+
+      <div class="topbar-right">
+        <span class="tb-shop-tag" id="tb-date"></span>
+        <div class="live-dot" title="Live"></div>
+        <button class="btn-counter-top" onclick="window.location.href='pages/billing.html'">⚡ Counter</button>
+        <button class="btn-logout-top"  onclick="doLogout()">Logout</button>
+      </div>
+    </header>
+
+    <!-- Content iframe -->
+    <div class="content-area">
+      <iframe
+        class="content-frame"
+        id="content-frame"
+        src="pages/dashboard.html"
+        title="Admin Content"
+      ></iframe>
+    </div>
+
+  </div><!-- /main-wrapper -->
+
+</div><!-- /admin-app -->
+
+<!-- ══ COUNTER MODAL ════════════════════════════════════════ -->
+<div class="modal-overlay" id="counter-modal" onclick="if(event.target===this)closeCounter()">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="modal-title">⚡ Counter — Fast Bill</div>
+
+    <!-- Mobile search -->
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <input class="inp" type="tel" id="ct-mob" maxlength="10"
+        placeholder="Customer mobile number..." inputmode="numeric"
+        onkeydown="if(event.key==='Enter')ctLookup()"/>
+      <button class="btn btn-yellow" onclick="ctLookup()" style="white-space:nowrap">
+        🔍 Find
+      </button>
+    </div>
+
+    <!-- Result -->
+    <div id="ct-result" style="display:none">
+      <div id="ct-alert-banner" style="display:none;background:#fff5f5;border:1.5px solid var(--red);border-radius:var(--r-md);padding:12px 14px;margin-bottom:10px">
+        <div style="font-size:12px;font-weight:800;color:var(--red);margin-bottom:3px">🚨 STAFF ALERT</div>
+        <div style="font-size:13px;color:#7f1d1d;font-weight:600" id="ct-alert-text"></div>
+      </div>
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--r-md);padding:14px;margin-bottom:12px">
+        <div style="font-size:16px;font-weight:700;color:var(--txt)" id="ct-name"></div>
+        <div style="font-size:13px;color:var(--txt2);margin-top:3px" id="ct-sub"></div>
+      </div>
+
+      <div id="ct-offers" style="margin-bottom:12px"></div>
+
+      <div class="row2" style="margin-bottom:12px">
+        <div class="field">
+          <label class="lbl">Bill Amount ₹</label>
+          <input class="inp" type="number" id="ct-amt" placeholder="0" oninput="ctCalc()"/>
+        </div>
+        <div class="field">
+          <label class="lbl">Final Amount ₹</label>
+          <input class="inp" type="number" id="ct-final" placeholder="0" readonly style="opacity:.7"/>
+        </div>
+      </div>
+
+      <div class="field" style="margin-bottom:12px">
+        <label class="lbl">Payment</label>
+        <div class="pay-btns">
+          <button class="pay-btn on" onclick="ctSelPay(this,'cash')">💵 Cash</button>
+          <button class="pay-btn"    onclick="ctSelPay(this,'upi')">📲 UPI</button>
+          <button class="pay-btn"    onclick="ctSelPay(this,'card')">💳 Card</button>
+        </div>
+      </div>
+
+      <div id="ct-applied-banner" style="display:none;background:#f0fdf4;border:1.5px solid var(--green);border-radius:var(--r-sm);padding:10px 14px;margin-bottom:10px">
+        <div style="font-size:12.5px;font-weight:700;color:#166534">
+          ✅ Applied: <span id="ct-applied-name"></span> — Code <span id="ct-applied-code" style="font-family:monospace;letter-spacing:1px"></span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
+          <input type="text" id="ct-verify-inp" placeholder="Customer se code bolwao (optional)..." maxlength="20" oninput="this.value=this.value.toUpperCase();ctCheckVerify()"
+            style="flex:1;background:#fff;border:1.5px solid #bbf7d0;border-radius:6px;padding:6px 10px;font-size:12px;font-family:monospace;letter-spacing:1px;outline:none"/>
+          <span id="ct-verify-status" style="font-size:16px"></span>
+        </div>
+      </div>
+
+      <div style="background:var(--yellow);border-radius:var(--r-md);padding:14px 16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <span style="font-size:13px;font-weight:700;color:#000">Discount: ₹<span id="ct-disc">0</span></span>
+        <span style="font-size:22px;font-weight:800;color:#000">₹<span id="ct-final-show">0</span></span>
+      </div>
+
+      <button class="btn btn-success btn-full" id="ct-confirm-btn" onclick="ctConfirm()">
+        ✅ Confirm & Save Bill
+      </button>
+    </div>
+
+    <!-- ── SUCCESS STATE (shown only after bill is saved) ──────── -->
+    <div id="ct-success" style="display:none;text-align:center;padding:10px 0">
+      <div style="font-size:48px;margin-bottom:8px">🎉</div>
+      <div style="font-size:17px;font-weight:800;color:var(--txt);margin-bottom:4px" id="ct-success-title">Bill Saved!</div>
+      <div style="font-size:13px;color:var(--txt2);margin-bottom:20px" id="ct-success-sub"></div>
+
+      <button class="btn btn-ghost btn-full" onclick="ctReceipt()" style="color:var(--green);border-color:var(--green);margin-bottom:8px">
+        📲 WhatsApp Receipt
+      </button>
+      <button class="btn btn-ghost btn-full" onclick="ctPrint()" style="color:var(--blue);border-color:var(--blue);margin-bottom:8px">
+        🖨️ Print Receipt
+      </button>
+      <button class="btn btn-yellow btn-full" onclick="ctNewBill()">
+        ➕ New Bill
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<script type="module">
+  import { LS } from './shared/constants.js';
+  import {
+    db, doc, getDoc, updateDoc, addDoc, collection, query, where, getDocs
+  } from './shared/firebase-config.js';
+
+  // ═══════════════════════════════════════════════════════
+  //  AUTH
+  // ═══════════════════════════════════════════════════════
+  const PASS_KEY = 'krh_admin_pass';
+
+  function getPass() {
+    return localStorage.getItem(PASS_KEY) || 'admin123';
+  }
+
+  window.doLogin = function() {
+    const v     = document.getElementById('gate-pass').value;
+    const errEl = document.getElementById('gate-err');
+    errEl.style.display = 'none';
+
+    if (v === getPass()) {
+      document.getElementById('gate').style.display = 'none';
+      document.getElementById('app').classList.add('visible');
+      initApp();
+    } else {
+      errEl.style.display = 'block';
+      document.getElementById('gate-pass').select();
+    }
+  };
+
+  document.getElementById('gate-pass').addEventListener('keydown', e => {
+    if (e.key === 'Enter') window.doLogin();
+  });
+
+  window.doLogout = function() {
+    document.getElementById('app').classList.remove('visible');
+    document.getElementById('gate').style.display = 'flex';
+    document.getElementById('gate-pass').value = '';
+  };
+
+  // ═══════════════════════════════════════════════════════
+  //  INIT
+  // ═══════════════════════════════════════════════════════
+  function initApp() {
+    // Date in topbar
+    document.getElementById('tb-date').textContent =
+      new Date().toLocaleDateString('en-IN',{ weekday:'short', day:'numeric', month:'short' });
+
+    // Shop name from settings
+    const sh = JSON.parse(localStorage.getItem(LS.shop) || '{}');
+    if (sh.loc)  document.getElementById('sb-location').textContent = sh.loc;
+
+    // Badges
+    updateBadges();
+    setInterval(updateBadges, 8000);
+  }
+
+  function updateBadges() {
+    const users = JSON.parse(localStorage.getItem(LS.users) || '[]');
+    const fb    = JSON.parse(localStorage.getItem('krh_feedback') || '[]');
+
+    // Points pending
+    let pending = 0;
+    users.forEach(u => {
+      const p = u.socialPending || {}, d = u.socialDone || {};
+      pending += Object.keys(p).filter(k => p[k] && !d[k]).length;
+    });
+    setBadge('badge-points',   pending);
+
+    // Feedback unread
+    setBadge('badge-feedback', fb.length);
+
+    // Alerts (bday + inactive)
+    const today = new Date();
+    const bdays = users.filter(u => {
+      if (!u.dob) return false;
+      const d = new Date(u.dob);
+      const n = new Date(today.getFullYear(), d.getMonth(), d.getDate());
+      if (n < today) n.setFullYear(today.getFullYear() + 1);
+      return Math.ceil((n - today) / 864e5) <= 7;
+    }).length;
+    setBadge('badge-alerts', bdays);
+  }
+
+  function setBadge(id, count) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.style.display = count > 0 ? 'block' : 'none';
+    el.textContent   = count;
+  }
+
+  // ═══════════════════════════════════════════════════════
+  //  SIDEBAR
+  // ═══════════════════════════════════════════════════════
+  let sidebarCollapsed = false;
+
+  window.toggleSidebar = function() {
+    sidebarCollapsed = !sidebarCollapsed;
+    document.getElementById('sidebar').classList.toggle('collapsed', sidebarCollapsed);
+    const btn = document.querySelector('.btn-toggle-sb');
+    btn.textContent = sidebarCollapsed ? '➡' : '⬅';
+  };
+
+  window.toggleMobileSidebar = function() {
+    document.getElementById('sidebar').classList.toggle('mobile-open');
+    document.getElementById('sb-overlay').classList.toggle('show');
+  };
+
+  window.closeSidebar = function() {
+    document.getElementById('sidebar').classList.remove('mobile-open');
+    document.getElementById('sb-overlay').classList.remove('show');
+  };
+
+  // ═══════════════════════════════════════════════════════
+  //  PAGE ROUTING
+  // ═══════════════════════════════════════════════════════
+  window.loadPage = function(name, title) {
+    // Update iframe
+    document.getElementById('content-frame').src = `pages/${name}.html`;
+
+    // Update topbar title
+    document.getElementById('topbar-title').textContent = title || name;
+
+    // Update active nav
+    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+    const navEl = document.getElementById('nav-' + name);
+    if (navEl) navEl.classList.add('active');
+
+    // Close mobile sidebar
+    closeSidebar();
+  };
+
+  // ═══════════════════════════════════════════════════════
+  //  COUNTER MODAL (quick billing)
+  // ═══════════════════════════════════════════════════════
+  let ctUser = null, ctPay = 'cash', ctDiscPct = 0, ctDiscFlat = 0, ctDiscType = 'discount', ctRewardId = null, ctExpectedCode = '', ctLastBill = null, ctAppliedCode = '';
+
+  window.openCounter = function() {
+    document.getElementById('counter-modal').classList.add('open');
+    setTimeout(() => document.getElementById('ct-mob').focus(), 100);
+  };
+
+  window.closeCounter = function() {
+    document.getElementById('counter-modal').classList.remove('open');
+    document.getElementById('ct-mob').value = '';
+    document.getElementById('ct-result').style.display = 'none';
+    document.getElementById('ct-amt').value   = '';
+    document.getElementById('ct-final').value = '';
+    document.getElementById('ct-disc').textContent      = '0';
+    document.getElementById('ct-final-show').textContent= '0';
+    document.getElementById('ct-applied-banner').style.display = 'none';
+    document.getElementById('ct-alert-banner').style.display = 'none';
+    document.getElementById('ct-success').style.display = 'none';
+    const cBtn = document.getElementById('ct-confirm-btn');
+    if (cBtn) { cBtn.disabled = false; cBtn.textContent = '✅ Confirm & Save Bill'; }
+    ctUser = null; ctDiscPct = 0; ctDiscFlat = 0; ctDiscType = 'discount'; ctPay = 'cash'; ctRewardId = null; ctExpectedCode = ''; ctLastBill = null; ctAppliedCode = '';
+  };
+
+  window.ctLookup = async function() {
+    const mob  = document.getElementById('ct-mob').value.trim();
+    if (mob.length !== 10) { alert('10-digit mobile dalein'); return; }
+
+    // ── Firestore-first lookup ──────────────────────────────
+    let found = null;
+    try {
+      const snap = await getDoc(doc(db, 'users', mob));
+      if (snap.exists()) found = { mobile: mob, ...snap.data() };
+    } catch (e) { console.warn('Firestore lookup failed', e); }
+    if (!found) {
+      const users = JSON.parse(localStorage.getItem(LS.users) || '[]');
+      found = users.find(u => u.mobile === mob);
+    }
+    ctUser = found;
+    if (!ctUser) {
+      document.getElementById('ct-result').style.display = 'none';
+      alert('Customer nahi mila. Pehle register karwao.');
+      return;
+    }
+
+    const s       = JSON.parse(localStorage.getItem(LS.settings) || '{}');
+    const discPct = s.defaultWelcomeDisc || 10;
+    const code    = 'ROLL' + mob.slice(-4).toUpperCase();
+
+    document.getElementById('ct-name').textContent = ctUser.name;
+    document.getElementById('ct-sub').textContent  =
+      `${ctUser.visits||0} visits · ${ctUser.points||0} pts · ${code}`;
+
+    const alertBanner = document.getElementById('ct-alert-banner');
+    if (ctUser.noteIsAlert && ctUser.adminNotes) {
+      alertBanner.style.display = 'block';
+      document.getElementById('ct-alert-text').textContent = ctUser.adminNotes;
+    } else {
+      alertBanner.style.display = 'none';
+    }
+
+    // ── Built-in offers ──────────────────────────────────────
+    const offers = [];
+    const isFirstVisit = (ctUser.visits || 0) === 0;
+    if (isFirstVisit) {
+      offers.push({ id:'welcome', label:`Welcome Discount`, pct: discPct, code: code });
+    }
+    const today  = new Date();
+    const dob    = ctUser.dob ? new Date(ctUser.dob) : null;
+    if (dob && dob.getDate()===today.getDate() && dob.getMonth()===today.getMonth()) {
+      const yr = today.getFullYear();
+      offers.push({ id:'bday', label:'🎂 Birthday Special', pct: 15, code: 'BDAY'+mob.slice(-4).toUpperCase()+yr });
+    }
+    const vGoal = s.defaultVisitThreshold || 5;
+    if ((ctUser.visits||0) % vGoal === 0 && (ctUser.visits||0) > 0) {
+      offers.push({ id:'visit', label:'🔥 Visit Milestone', pct: 0, code: 'VIS'+mob.slice(-4).toUpperCase() });
+    }
+
+    document.getElementById('ct-offers').innerHTML =
+      offers.map(o => `
+        <div class="offer-item" data-pct="${o.pct}" data-base-bg="var(--inp-bg)" data-base-br="var(--inp-br)" onclick="ctSelOffer(this,${o.pct},null,'${o.label.replace(/'/g,"")}','${o.code}',0,'discount')"
+          style="background:var(--inp-bg);border:1.5px solid var(--inp-br);border-radius:var(--r-sm);
+          padding:10px 14px;cursor:pointer;margin-bottom:7px;transition:border-color .15s">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:13px;font-weight:600;color:var(--txt)">${o.label}</span>
+            <span style="font-size:13px;font-weight:700;color:var(--green)">${o.pct>0 ? o.pct+'% OFF' : '✓'}</span>
+          </div>
+          <div style="font-size:11px;font-weight:700;color:var(--txt3);margin-top:4px;font-family:monospace;letter-spacing:1px">Code: ${o.code}</div>
+        </div>`).join('');
+
+    if (!offers.length) {
+      document.getElementById('ct-offers').innerHTML =
+        '<div style="font-size:12.5px;color:var(--txt3);text-align:center;padding:10px">Koi built-in offer abhi eligible nahi hai</div>';
+    }
+
+    document.getElementById('ct-result').style.display = 'block';
+
+    // ── Fetch admin-created rewards too (Firestore) ──────────
+    try {
+      const snap = await getDocs(query(collection(db, 'rewards'), where('active','==',true)));
+      const extraHtml = [];
+      snap.forEach(d => {
+        const rw = d.data();
+        const alreadyUsed = rw.singleUse && rw.usedBy && rw.usedBy.indexOf(mob) !== -1;
+        const maxedOut = rw.maxUses && (rw.usageCount||0) >= rw.maxUses;
+        const expired = rw.expiryDate && new Date(rw.expiryDate) < today;
+        if (alreadyUsed || maxedOut || expired) return;
+
+        const rType = rw.type || 'discount';
+        const rVal  = rw.value || rw.discountPct || 0;
+        let badge, calcPct, calcFlat;
+        if (rType === 'cashback') {
+          badge = '₹' + rVal + ' OFF'; calcPct = 0; calcFlat = parseFloat(rVal) || 0;
+        } else if (rType === 'free_item') {
+          badge = '🎁 FREE'; calcPct = 0; calcFlat = 0;
+        } else {
+          badge = (parseInt(rVal)||0) + '% OFF'; calcPct = parseInt(rVal) || 0; calcFlat = 0;
+        }
+
+        const title = rw.title || rw.label || rw.name || 'Offer';
+        const rwCode = rw.code || '—';
+        extraHtml.push(`
+          <div class="offer-item reward-offer" data-pct="${calcPct}" data-flat="${calcFlat}" data-type="${rType}" data-base-bg="#fffbe6" data-base-br="#ffe58f" onclick="ctSelOffer(this,${calcPct},'${d.id}','${title.replace(/'/g,"")}','${rwCode}',${calcFlat},'${rType}')"
+            style="background:#fffbe6;border:1.5px solid #ffe58f;border-radius:var(--r-sm);
+            padding:10px 14px;cursor:pointer;margin-bottom:7px;transition:border-color .15s">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="font-size:13px;font-weight:600;color:var(--txt)">🎁 ${title}</span>
+              <span style="font-size:13px;font-weight:700;color:var(--green)">${badge}</span>
+            </div>
+            <div style="font-size:11px;font-weight:700;color:#9a7000;margin-top:4px;font-family:monospace;letter-spacing:1px">Code: ${rwCode}</div>
+          </div>`);
+      });
+      if (extraHtml.length) {
+        document.getElementById('ct-offers').innerHTML += extraHtml.join('');
+      }
+    } catch (e) { console.warn('rewards fetch failed', e); }
+  };
+
+  window.ctSelOffer = function(el, pct, rewardId, offerName, offerCode, flatAmt, discType) {
+    const alreadyOn = el.style.borderColor === 'var(--green)' || el.getAttribute('data-selected') === '1';
+    document.querySelectorAll('.offer-item').forEach(i => {
+      i.style.borderColor = i.getAttribute('data-base-br') || 'var(--inp-br)';
+      i.style.background  = i.getAttribute('data-base-bg') || 'var(--inp-bg)';
+      i.removeAttribute('data-selected');
+    });
+
+    const bannerEl = document.getElementById('ct-applied-banner');
+    if (alreadyOn) {
+      // Toggle off — deselect
+      ctDiscPct = 0; ctDiscFlat = 0; ctDiscType = 'discount'; ctRewardId = null; ctAppliedCode = '';
+      if (bannerEl) bannerEl.style.display = 'none';
+    } else {
+      el.style.borderColor = 'var(--green)';
+      el.style.background  = '#f0fdf4';
+      el.setAttribute('data-selected', '1');
+      ctDiscPct  = pct || 0;
+      ctDiscFlat = flatAmt || 0;
+      ctDiscType = discType || 'discount';
+      ctRewardId = rewardId || null;
+      ctAppliedCode = offerCode || '';
+      if (bannerEl) {
+        bannerEl.style.display = 'block';
+        document.getElementById('ct-applied-name').textContent = offerName || '';
+        document.getElementById('ct-applied-code').textContent = offerCode || '';
+        document.getElementById('ct-verify-inp').value = '';
+        document.getElementById('ct-verify-status').textContent = '';
+        ctExpectedCode = offerCode || '';
+      }
+    }
+    ctCalc();
+  };
+
+  window.ctCheckVerify = function() {
+    const v = document.getElementById('ct-verify-inp').value.trim();
+    const statusEl = document.getElementById('ct-verify-status');
+    if (!v) { statusEl.textContent = ''; return; }
+    statusEl.textContent = (v === ctExpectedCode) ? '✅' : '❌';
+  };
+
+  window.ctCalc = function() {
+    const amt  = parseFloat(document.getElementById('ct-amt').value) || 0;
+    let disc;
+    if (ctDiscFlat > 0) {
+      disc = Math.min(ctDiscFlat, amt); // flat ₹ off, capped at bill amount
+    } else {
+      disc = Math.round(amt * ctDiscPct / 100);
+    }
+    const final= amt - disc;
+    document.getElementById('ct-final').value        = final;
+    document.getElementById('ct-disc').textContent   = disc;
+    document.getElementById('ct-final-show').textContent = final;
+  };
+
+  window.ctSelPay = function(el, method) {
+    document.querySelectorAll('.pay-btn').forEach(b => b.classList.remove('on'));
+    el.classList.add('on');
+    ctPay = method;
+  };
+
+  window.ctConfirm = async function() {
+    if (!ctUser) return;
+    const amt   = parseFloat(document.getElementById('ct-amt').value)   || 0;
+    if (amt <= 0) { alert('Bill amount dalein'); return; }
+    const final = parseFloat(document.getElementById('ct-final').value) || amt;
+    const disc  = Math.round((amt - final) * 100) / 100;
+    const mob   = ctUser.mobile;
+
+    // ── Disable button immediately — prevent double-click/double-save ──
+    const btn = document.getElementById('ct-confirm-btn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Saving...';
+
+    const s    = JSON.parse(localStorage.getItem(LS.settings) || '{}');
+    const goal = s.defaultVisitThreshold || 5;
+    const visitBonus  = s.defaultPerVisitPts || 5;
+    const perRupeeRate = s.pointsPer10Rs || 0;
+    const spendPts = Math.floor((amt / 10) * perRupeeRate);
+    const ptsAdd   = visitBonus + spendPts;
+
+    const newVisits = (ctUser.visits || 0) + 1;
+    const newPoints = (ctUser.points || 0) + ptsAdd;
+    const newSaved  = (ctUser.saved  || 0) + disc;
+    const nowIso    = new Date().toISOString();
+
+    let saveOk = true;
+
+    // ── Build extra fields for built-in coupon auto-mark-used ──
+    const extraFields = {};
+    if (ctAppliedCode.startsWith('ROLL')) extraFields.couponUsed_welcome = nowIso;
+    if (ctAppliedCode.startsWith('BDAY')) extraFields.couponUsed_birthday = nowIso;
+
+    // ── 1. Customer update ───────────────────────────────────
+    try {
+      await updateDoc(doc(db, 'users', mob), {
+        visits: newVisits, points: newPoints, saved: newSaved,
+        lastVisit: nowIso, ...extraFields
+      });
+    } catch (e) {
+      console.warn('Firestore customer update failed', e);
+      saveOk = false;
+    }
+
+    // ── 2. Bill record ───────────────────────────────────────
+    let billId = null;
+    try {
+      const billRef = await addDoc(collection(db, 'bills'), {
+        mobile: mob, name: ctUser.name, amt, final, discount: disc,
+        offer: ctRewardId ? 'reward' : (ctDiscPct > 0 ? 'welcome' : 'none'),
+        payment: ctPay, time: nowIso, visitNumber: newVisits,
+        pointsEarned: ptsAdd
+      });
+      billId = billRef.id;
+    } catch (e) {
+      console.warn('Firestore bill add failed', e);
+      saveOk = false;
+    }
+
+    // ── 3. Mark reward as used (expires coupon for customer) ──
+    if (ctRewardId && disc > 0) {
+      try {
+        const rwRef = doc(db, 'rewards', ctRewardId);
+        const rwDoc = await getDoc(rwRef);
+        if (rwDoc.exists()) {
+          const rw = rwDoc.data();
+          const usedBy = rw.usedBy || [];
+          if (usedBy.indexOf(mob) === -1) usedBy.push(mob);
+          const amounts = rw.savedAmounts || {};
+          amounts[mob] = (parseInt(amounts[mob]) || 0) + disc;
+          await updateDoc(rwRef, {
+            usageCount: (rw.usageCount || 0) + 1,
+            usedBy: usedBy,
+            savedAmount: (parseInt(rw.savedAmount) || 0) + disc,
+            savedAmounts: amounts
+          });
+        }
+      } catch (e) { console.warn('reward mark-used failed', e); }
+    }
+
+    // ── LocalStorage sync (offline fallback, always do this) ──
+    const users = JSON.parse(localStorage.getItem(LS.users) || '[]');
+    const idx   = users.findIndex(u => u.mobile === mob);
+    if (idx !== -1) {
+      users[idx].visits = newVisits; users[idx].points = newPoints; users[idx].saved = newSaved;
+      localStorage.setItem(LS.users, JSON.stringify(users));
+    }
+    const bills = JSON.parse(localStorage.getItem(LS.bills) || '[]');
+    bills.unshift({
+      mobile: mob, name: ctUser.name, amt, final, discount: disc,
+      offer: ctRewardId ? 'reward' : (ctDiscPct > 0 ? 'welcome' : 'none'),
+      payment: ctPay, time: nowIso, pointsEarned: ptsAdd
+    });
+    localStorage.setItem(LS.bills, JSON.stringify(bills));
+
+    btn.disabled = false;
+    btn.textContent = '✅ Confirm & Save Bill';
+
+    if (!saveOk) {
+      alert('⚠️ Kuch save nahi hua — internet check karo aur dobara try karo. Bill abhi tak confirm NAHI hua hai.');
+      return; // ── Do NOT show success/WhatsApp/Print — save failed ──
+    }
+
+    // ── Save successful — store last-bill data for receipt/print ──
+    ctUser.visits = newVisits; ctUser.points = newPoints; ctUser.saved = newSaved;
+    ctLastBill = {
+      name: ctUser.name, mobile: mob, amt, final, disc, pay: ctPay,
+      points: newPoints, pointsEarned: ptsAdd, visits: newVisits, billId,
+      isMilestone: newVisits % goal === 0,
+      rewardLabel: s.defaultVisitReward || 'FREE item'
+    };
+
+    // ── Show success state, hide the form ─────────────────────
+    document.getElementById('ct-result').style.display  = 'none';
+    document.getElementById('ct-success').style.display  = 'block';
+    document.getElementById('ct-success-title').textContent =
+      ctLastBill.isMilestone ? `🎉 Visit ${newVisits} — Milestone!` : '✅ Bill Saved!';
+    document.getElementById('ct-success-sub').textContent =
+      ctLastBill.isMilestone
+        ? `${ctUser.name} ko ${ctLastBill.rewardLabel} milega! · +${ptsAdd} pts`
+        : `${ctUser.name} · ₹${final} · +${ptsAdd} pts`;
+
+    // ── Refresh dashboard/customers iframe if open ─────────────
+    const frame = document.getElementById('content-frame');
+    if (frame && frame.src && (frame.src.includes('dashboard') || frame.src.includes('customers'))) {
+      try { frame.contentWindow?.location.reload(); } catch(e) {}
+    }
+    updateBadges();
+  };
+
+  window.ctReceipt = function() {
+    if (!ctLastBill) return;
+    const b  = ctLastBill;
+    const sh = JSON.parse(localStorage.getItem(LS.shop) || '{}');
+    const msg = encodeURIComponent(
+      `🧾 *${sh.name || 'Kathi Roll Hub'} — Bill Receipt*\n` +
+      `────────────────\n` +
+      `👤 ${b.name}\n📱 ${b.mobile}\n` +
+      `────────────────\n` +
+      `💰 Amount: ₹${b.amt}\n${b.disc>0?`🎁 Discount: -₹${b.disc}\n`:''}` +
+      `✅ *Final: ₹${b.final}*\n💳 ${b.pay.toUpperCase()}\n` +
+      `────────────────\n` +
+      `⭐ Points Earned: +${b.pointsEarned}\n` +
+      `⭐ Total Points: ${b.points}\n` +
+      `Dhanyawaad! Dobara aana 🙏`
+    );
+    window.open(`https://wa.me/${b.mobile}?text=${msg}`, '_blank');
+  };
+
+  window.ctPrint = function() {
+    if (!ctLastBill) return;
+    const b  = ctLastBill;
+    const sh = JSON.parse(localStorage.getItem(LS.shop) || '{}');
+    const html = `
+      <html><head><title>Receipt</title>
+      <style>
+        body{font-family:monospace;width:280px;margin:0 auto;padding:16px;font-size:13px}
+        .c{text-align:center} .b{font-weight:700} hr{border:none;border-top:1px dashed #000;margin:8px 0}
+        .row{display:flex;justify-content:space-between}
+      </style></head><body>
+      <div class="c b" style="font-size:15px">${sh.name || 'Kathi Roll Hub'}</div>
+      <div class="c">${sh.loc || ''}</div>
+      <hr/>
+      <div class="row"><span>Customer</span><span class="b">${b.name}</span></div>
+      <div class="row"><span>Mobile</span><span>${b.mobile}</span></div>
+      <div class="row"><span>Date</span><span>${new Date().toLocaleString('en-IN')}</span></div>
+      <hr/>
+      <div class="row"><span>Bill Amount</span><span>₹${b.amt}</span></div>
+      ${b.disc>0?`<div class="row"><span>Discount</span><span>-₹${b.disc}</span></div>`:''}
+      <div class="row b" style="font-size:15px"><span>Final</span><span>₹${b.final}</span></div>
+      <div class="row"><span>Payment</span><span>${b.pay.toUpperCase()}</span></div>
+      <hr/>
+      <div class="row"><span>Points Earned</span><span>+${b.pointsEarned}</span></div>
+      <div class="row"><span>Total Points</span><span>${b.points}</span></div>
+      <hr/>
+      <div class="c">Dhanyawaad! Dobara aana 🙏</div>
+      </body></html>`;
+    const w = window.open('', '_blank');
+    w.document.write(html);
+    w.document.close();
+    setTimeout(() => w.print(), 250);
+  };
+
+  window.ctNewBill = function() {
+    ctLastBill = null;
+    closeCounter();
+    openCounter();
+  };
+</script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
