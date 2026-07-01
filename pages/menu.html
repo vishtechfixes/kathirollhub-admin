@@ -1,0 +1,1160 @@
+
+
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="../css/admin.css"/>
+  <style>
+    body { background: var(--bg); margin: 0; padding: 0; }
+    .page { padding: 24px 20px 80px; max-width: 960px; }
+
+    /* ── Page header ── */
+    .page-header {
+      display: flex; align-items: flex-start;
+      justify-content: space-between;
+      flex-wrap: wrap; gap: 12px; margin-bottom: 20px;
+    }
+    .page-title { font-size: 20px; font-weight: 800; color: var(--txt); }
+    .page-sub   { font-size: 13px; color: var(--txt2); margin-top: 3px; }
+
+    /* ── Stat strip ── */
+    .stat-strip {
+      display: grid; grid-template-columns: repeat(4,1fr);
+      gap: 10px; margin-bottom: 20px;
+    }
+    @media(max-width:600px){ .stat-strip { grid-template-columns: repeat(2,1fr); } }
+    .ss {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--r-lg); padding: 14px 16px;
+      box-shadow: var(--shadow-sm); position: relative; overflow: hidden;
+    }
+    .ss-accent { position:absolute;top:0;left:0;right:0;height:3px;border-radius:4px 4px 0 0; }
+    .ss-icon { font-size:20px;margin-bottom:8px;display:block; }
+    .ss-val  { font-size:26px;font-weight:800;color:var(--txt);line-height:1;margin-bottom:4px; }
+    .ss-val.g{color:var(--green)} .ss-val.r{color:var(--red)}
+    .ss-val.y{color:#ca8a04}      .ss-val.b{color:var(--blue)}
+    .ss-lbl  { font-size:12px;color:var(--txt2);font-weight:600; }
+
+    /* ── Add form card ── */
+    .form-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--r-lg); padding: 20px;
+      box-shadow: var(--shadow-sm); margin-bottom: 20px;
+    }
+    .form-card-title {
+      font-size: 15px; font-weight: 700; color: var(--txt);
+      margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+    }
+
+    /* ── Emoji picker ── */
+    .emoji-field {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
+    }
+    .emoji-preview {
+      width: 52px; height: 52px; border-radius: var(--r-md);
+      background: var(--bg); border: 1.5px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px; cursor: pointer; flex-shrink: 0;
+      transition: border-color .15s;
+    }
+    .emoji-preview:hover { border-color: var(--blue); }
+    .emoji-picker {
+      display: none; flex-wrap: wrap; gap: 6px; padding: 10px;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--r-md); box-shadow: var(--shadow-md);
+      position: absolute; z-index: 50; max-width: 280px;
+    }
+    .emoji-picker.open { display: flex; }
+    .ep-btn {
+      font-size: 22px; cursor: pointer; padding: 4px;
+      border-radius: 6px; border: none; background: none;
+      transition: background .1s; line-height: 1;
+    }
+    .ep-btn:hover { background: var(--bg); }
+
+    /* ── Category toggle ── */
+    .cat-type-row {
+      display: flex; gap: 8px; margin-bottom: 14px;
+    }
+    .cat-type-btn {
+      flex: 1; padding: 9px; border-radius: var(--r-sm);
+      border: 1.5px solid var(--border); background: var(--bg);
+      font-family: var(--font); font-size: 13px; font-weight: 700;
+      color: var(--txt2); cursor: pointer; transition: all .15s;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .cat-type-btn.on { border-color: var(--green); background: #f0fdf4; color: #166534; }
+    .cat-type-btn.non.on { border-color: var(--red); background: #fff5f5; color: #991b1b; }
+
+    /* ── Margin calculator ── */
+    .margin-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 12px; font-weight: 700; padding: 4px 10px;
+      border-radius: 99px;
+    }
+    .margin-badge.high { background: #dcfce7; color: #166534; }
+    .margin-badge.mid  { background: #fef9c3; color: #92400e; }
+    .margin-badge.low  { background: #fee2e2; color: #991b1b; }
+
+    /* ── Table card ── */
+    .tbl-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--r-lg); box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+    .tbl-header {
+      padding: 14px 20px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 10px;
+    }
+    .tbl-header-left { font-size: 14px; font-weight: 700; color: var(--txt); }
+    .tbl-controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+    /* Search */
+    .search-inp-wrap {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: var(--r-sm); padding: 7px 12px;
+    }
+    .search-inp {
+      background: none; border: none; outline: none;
+      font-family: var(--font); font-size: 13px; color: var(--txt);
+      width: 160px;
+    }
+    .search-inp::placeholder { color: var(--txt3); }
+    .cat-filter {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: var(--r-sm); color: var(--txt);
+      font-family: var(--font); font-size: 13px; font-weight: 600;
+      padding: 7px 12px; outline: none; cursor: pointer;
+    }
+
+    /* ── Table rows ── */
+    .menu-item-emoji {
+      width: 38px; height: 38px; border-radius: var(--r-sm);
+      background: var(--bg); display: flex; align-items: center;
+      justify-content: center; font-size: 20px; flex-shrink: 0;
+    }
+    .item-name { font-size: 14px; font-weight: 700; color: var(--txt); }
+    .item-cat  { font-size: 12px; color: var(--txt3); margin-top: 2px; }
+    .price-inp {
+      width: 80px; background: var(--inp-bg);
+      border: 1.5px solid var(--inp-br); border-radius: 6px;
+      color: var(--txt); font-family: var(--font);
+      font-size: 13px; font-weight: 700; padding: 6px 10px;
+      outline: none; transition: border-color .15s;
+    }
+    .price-inp:focus { border-color: var(--blue); }
+    .disc-inp {
+      width: 60px; background: var(--inp-bg);
+      border: 1.5px solid var(--inp-br); border-radius: 6px;
+      color: var(--txt); font-family: var(--font);
+      font-size: 13px; padding: 6px 8px; outline: none;
+    }
+    .disc-inp:focus { border-color: var(--blue); }
+
+    /* Veg/non-veg dot */
+    .veg-dot {
+      width: 12px; height: 12px; border-radius: 50%;
+      display: inline-block; flex-shrink: 0;
+    }
+    .veg-dot.veg     { background: var(--green); }
+    .veg-dot.non-veg { background: var(--red); }
+
+    /* Available toggle column */
+    .avail-cell { display: flex; align-items: center; gap: 8px; }
+    .avail-lbl  { font-size: 12px; font-weight: 700; }
+
+    /* ── Save row (sticky bottom) ── */
+    .save-strip {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: var(--card); border-top: 1px solid var(--border);
+      padding: 12px 24px;
+      display: flex; align-items: center; justify-content: space-between;
+      z-index: 50; box-shadow: 0 -4px 16px rgba(0,0,0,.06);
+      flex-wrap: wrap; gap: 10px;
+    }
+    .save-msg { font-size: 13px; font-weight: 600; color: var(--txt2); }
+    .save-msg.ok  { color: var(--green); }
+    .save-msg.err { color: var(--red); }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed; bottom: 70px; left: 50%; transform: translateX(-50%);
+      background: var(--txt); color: var(--card);
+      font-size: 13px; font-weight: 700; padding: 10px 20px;
+      border-radius: 99px; z-index: 999; opacity: 0; transition: opacity .3s;
+      white-space: nowrap; pointer-events: none;
+    }
+    .toast.show { opacity: 1; }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center; padding: 48px 24px; color: var(--txt2);
+    }
+    .empty-state .ei { font-size: 40px; display: block; margin-bottom: 12px; }
+
+    @media(max-width:640px){
+      .hide-sm { display: none; }
+      .search-inp { width: 100px; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ── Header ── -->
+  <div class="page-header">
+    <div>
+      <div class="page-title">🌯 Menu Management</div>
+      <div class="page-sub">Items add/edit karo. Firestore ke menu collection mein save hoga.</div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-ghost" onclick="loadMenu()">↻ Refresh</button>
+    </div>
+  </div>
+
+  <!-- ── Stats ── -->
+  <div class="stat-strip" id="stat-strip">
+    <div class="ss"><div class="ss-accent" style="background:var(--blue)"></div><span class="ss-icon">🌯</span><div class="ss-val b" id="s-total">—</div><div class="ss-lbl">Total Items</div></div>
+    <div class="ss"><div class="ss-accent" style="background:var(--green)"></div><span class="ss-icon">✅</span><div class="ss-val g" id="s-avail">—</div><div class="ss-lbl">Available</div></div>
+    <div class="ss"><div class="ss-accent" style="background:var(--red)"></div><span class="ss-icon">❌</span><div class="ss-val r" id="s-out">—</div><div class="ss-lbl">Out of Stock</div></div>
+    <div class="ss"><div class="ss-accent" style="background:#ca8a04"></div><span class="ss-icon">📂</span><div class="ss-val y" id="s-cats">—</div><div class="ss-lbl">Categories</div></div>
+  </div>
+
+ 
+
+  <!-- ── Add Item Form ── -->
+  <div class="form-card" id="add-form">
+    <div class="form-card-title">➕ Naya Item Add Karo</div>
+
+    <!-- Emoji + Name row -->
+    <div class="emoji-field" style="position:relative">
+      <div>
+        <div class="emoji-preview" id="emoji-preview" onclick="togglePicker()">🌯</div>
+        <div class="emoji-picker" id="emoji-picker">
+          <button class="ep-btn" onclick="setEmoji('🌯')">🌯</button>
+          <button class="ep-btn" onclick="setEmoji('🥟')">🥟</button>
+          <button class="ep-btn" onclick="setEmoji('🍜')">🍜</button>
+          <button class="ep-btn" onclick="setEmoji('🍲')">🍲</button>
+          <button class="ep-btn" onclick="setEmoji('🥗')">🥗</button>
+          <button class="ep-btn" onclick="setEmoji('🍱')">🍱</button>
+          <button class="ep-btn" onclick="setEmoji('☕')">☕</button>
+          <button class="ep-btn" onclick="setEmoji('🥤')">🥤</button>
+          <button class="ep-btn" onclick="setEmoji('🧃')">🧃</button>
+          <button class="ep-btn" onclick="setEmoji('🍦')">🍦</button>
+          <button class="ep-btn" onclick="setEmoji('🍫')">🍫</button>
+          <button class="ep-btn" onclick="setEmoji('🔥')">🔥</button>
+          <button class="ep-btn" onclick="setEmoji('⭐')">⭐</button>
+          <button class="ep-btn" onclick="setEmoji('🍛')">🍛</button>
+          <button class="ep-btn" onclick="setEmoji('🥚')">🥚</button>
+          <button class="ep-btn" onclick="setEmoji('🧀')">🧀</button>
+          <button class="ep-btn" onclick="setEmoji('🥔')">🥔</button>
+          <button class="ep-btn" onclick="setEmoji('🌿')">🌿</button>
+          <button class="ep-btn" onclick="setEmoji('🍗')">🍗</button>
+          <button class="ep-btn" onclick="setEmoji('🥩')">🥩</button>
+        </div>
+      </div>
+      <div style="flex:1">
+        <label class="lbl">Item Name <span style="color:var(--red)">*</span></label>
+        <input class="inp" type="text" id="f-name" placeholder="e.g. Paneer Kathi Roll"/>
+      </div>
+    </div>
+
+    <!-- Veg / Non-veg -->
+    <div style="margin-bottom:14px">
+      <label class="lbl">Type</label>
+      <div class="cat-type-row">
+        <button type="button" class="cat-type-btn on" id="btn-veg" onclick="setType('veg')">
+          🟢 Veg
+        </button>
+        <button type="button" class="cat-type-btn non" id="btn-non" onclick="setType('non-veg')">
+          🔴 Non-Veg
+        </button>
+      </div>
+    </div>
+
+    <!-- Price / Cost / Margin -->
+    <div class="row3" style="margin-bottom:14px">
+      <div class="field">
+        <label class="lbl">Selling Price ₹ <span style="color:var(--red)">*</span></label>
+        <input class="inp inp-sm" type="number" id="f-price" placeholder="90" min="0" oninput="calcMargin()"/>
+      </div>
+      <div class="field">
+        <label class="lbl">Cost Price ₹ (optional)</label>
+        <input class="inp inp-sm" type="number" id="f-cost" placeholder="40" min="0" oninput="calcMargin()"/>
+      </div>
+      <div class="field">
+        <label class="lbl">Margin</label>
+        <div id="margin-result" style="padding:9px 0;font-size:13px;color:var(--txt3);font-weight:600">
+          — daalo toh dikhega
+        </div>
+      </div>
+    </div>
+
+    <!-- Category / Discount / Show on app -->
+    <div class="row3" style="margin-bottom:16px">
+      <div class="field">
+        <label class="lbl">Category</label>
+        <select class="inp inp-sm" id="f-cat">
+          <option>Kathi Roll</option>
+          <option>Momos</option>
+          <option>Chinese</option>
+          <option>Shake</option>
+          <option>Coffee</option>
+          <option>Snacks</option>
+          <option>Dessert</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="lbl">Discount % (0 = none)</label>
+        <input class="inp inp-sm" type="number" id="f-disc" placeholder="0" min="0" max="100"/>
+      </div>
+      <div class="field">
+        <label class="lbl">App pe show?</label>
+        <select class="inp inp-sm" id="f-show">
+          <option value="1">✅ Yes</option>
+          <option value="0">❌ No (Hidden)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Best Seller badge toggle -->
+    <div style="margin-bottom:16px">
+      <label class="lbl">Marketing Badge</label>
+      <div class="cat-type-row">
+        <button type="button" class="cat-type-btn" id="btn-bestseller" onclick="toggleBestSeller()">
+          ⭐ Best Seller
+        </button>
+      </div>
+    </div>
+
+    <!-- Preparation Time -->
+    <div class="field" style="max-width:220px;margin-bottom:16px">
+      <label class="lbl">Preparation Time (minutes)</label>
+      <input class="inp inp-sm" type="number" id="f-preptime" placeholder="10" min="0"/>
+      <p style="font-size:11px;color:var(--txt3);margin-top:4px">Customer ko dikhega "10 mins mein banega"</p>
+    </div>
+
+    <!-- Variants (Half/Full, Single/Double Egg, etc) -->
+    <div style="margin-bottom:16px">
+      <label class="lbl">Variants / Sizes (optional)</label>
+      <p style="font-size:11px;color:var(--txt3);margin-bottom:8px">Agar yahan koi variant add karoge, customer ko order karte waqt ek choose karna hoga. Khali rakho toh item single-price rahega.</p>
+      <div id="variant-rows"></div>
+      <button type="button" class="btn btn-ghost btn-sm" onclick="addVariantRow()" style="margin-top:6px">
+        ➕ Variant Add Karo
+      </button>
+    </div>
+
+    <div class="msg-err" id="add-err" style="margin-bottom:10px"></div>
+    <button class="btn btn-yellow btn-full" id="add-btn" onclick="addItem()">
+      🏷️ Add to Menu
+    </button>
+  </div>
+
+  <!-- ── Menu Table ── -->
+  <div class="tbl-card">
+    <div class="tbl-header">
+      <div class="tbl-header-left">📋 Current Menu</div>
+      <div class="tbl-controls">
+        <div class="search-inp-wrap">
+          <span style="color:var(--txt3);font-size:14px">🔍</span>
+          <input class="search-inp" type="text" id="search-inp"
+            placeholder="Item naam..." oninput="filterMenu()"/>
+        </div>
+        <select class="cat-filter" id="cat-filter" onchange="filterMenu()">
+          <option value="">Sab Categories</option>
+          <option>Kathi Roll</option>
+          <option>Momos</option>
+          <option>Chinese</option>
+          <option>Shake</option>
+          <option>Coffee</option>
+          <option>Snacks</option>
+          <option>Dessert</option>
+          <option>Other</option>
+        </select>
+        <select class="cat-filter" id="type-filter" onchange="filterMenu()">
+          <option value="">Veg + Non-veg</option>
+          <option value="veg">🟢 Veg only</option>
+          <option value="non-veg">🔴 Non-Veg only</option>
+        </select>
+        <select class="cat-filter" id="sort-filter" onchange="filterMenu()">
+          <option value="">Sort: Default</option>
+          <option value="profit-high">💰 Sort by Profit (High→Low)</option>
+          <option value="profit-low">💸 Sort by Profit (Low→High)</option>
+          <option value="price-high">⬆️ Price (High→Low)</option>
+          <option value="price-low">⬇️ Price (Low→High)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Bulk Status Toggle -->
+    <div style="padding:12px 20px;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:var(--bg)">
+      <span style="font-size:12.5px;font-weight:700;color:var(--txt2)">⚡ Bulk Action:</span>
+      <select class="cat-filter" id="bulk-cat">
+        <option value="">Category chuno...</option>
+        <option>Kathi Roll</option>
+        <option>Momos</option>
+        <option>Chinese</option>
+        <option>Shake</option>
+        <option>Coffee</option>
+        <option>Snacks</option>
+        <option>Dessert</option>
+        <option>Other</option>
+      </select>
+      <button class="btn btn-danger btn-sm" onclick="bulkSetAvailability(false)">❌ Sab Out of Stock</button>
+      <button class="btn btn-success btn-sm" onclick="bulkSetAvailability(true)">✅ Sab Available</button>
+    </div>
+
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th>Type</th>
+            <th>Category</th>
+            <th>Price ₹</th>
+            <th class="hide-sm">Discount %</th>
+            <th class="hide-sm">Margin</th>
+            <th>Available</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="menu-tbody"></tbody>
+      </table>
+      <div class="empty-state" id="menu-empty" style="display:none">
+        <span class="ei">🌯</span>
+        <div style="font-size:15px;font-weight:700;color:var(--txt);margin-bottom:6px">
+          Koi item nahi mila
+        </div>
+        <p>Naya item add karo upar wale form se.</p>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /page -->
+
+<!-- Sticky save strip -->
+<div class="save-strip">
+  <div class="save-msg" id="save-msg">Koi unsaved price changes nahi</div>
+  <div style="display:flex;gap:8px">
+    <button class="btn btn-ghost" onclick="loadMenu()">Discard</button>
+    <button class="btn btn-success" id="save-btn" onclick="saveAllPrices()">
+      💾 Save Price Changes
+    </button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+  import {
+    getMenu, saveMenuItem, deleteMenuItem,
+    fmtDate
+  } from '../js/admin.js';
+
+  // ── State ──────────────────────────────────────────────────
+  let allItems     = [];
+  let filteredItems = [];
+  let selEmoji     = '🌯';
+  let selType      = 'veg';
+  let isBestSeller = false;
+  let variantRows  = [];   // [{ id, name, price }]
+  let variantIdSeq = 0;
+  let dirtyPrices  = {};   // { id: { price, disc } }
+
+  // ── Emoji picker ───────────────────────────────────────────
+  window.togglePicker = function() {
+    document.getElementById('emoji-picker').classList.toggle('open');
+  };
+  window.setEmoji = function(e) {
+    selEmoji = e;
+    document.getElementById('emoji-preview').textContent = e;
+    document.getElementById('emoji-picker').classList.remove('open');
+  };
+  document.addEventListener('click', e => {
+    if (!e.target.closest('#emoji-preview') && !e.target.closest('#emoji-picker')) {
+      document.getElementById('emoji-picker').classList.remove('open');
+    }
+  });
+
+  // ── Veg / Non-veg ──────────────────────────────────────────
+  window.setType = function(type) {
+    selType = type;
+    document.getElementById('btn-veg').classList.toggle('on', type === 'veg');
+    document.getElementById('btn-non').classList.toggle('on', type === 'non-veg');
+  };
+
+  // ── Best Seller toggle ──────────────────────────────────────
+  window.toggleBestSeller = function() {
+    isBestSeller = !isBestSeller;
+    document.getElementById('btn-bestseller').classList.toggle('on', isBestSeller);
+  };
+
+  // ── Variants management ─────────────────────────────────────
+  window.addVariantRow = function() {
+    const id = 'v' + (variantIdSeq++);
+    variantRows.push({ id, name: '', price: '' });
+    renderVariantRows();
+  };
+
+  window.removeVariantRow = function(id) {
+    variantRows = variantRows.filter(v => v.id !== id);
+    renderVariantRows();
+  };
+
+  window.updateVariantField = function(id, field, value) {
+    const row = variantRows.find(v => v.id === id);
+    if (row) row[field] = value;
+  };
+
+  function renderVariantRows() {
+    const wrap = document.getElementById('variant-rows');
+    if (!wrap) return;
+    wrap.innerHTML = variantRows.map(v => `
+      <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center">
+        <input class="inp inp-sm" type="text" placeholder="e.g. Half"
+          value="${v.name}" style="flex:1.4"
+          onchange="updateVariantField('${v.id}','name',this.value)"/>
+        <span style="color:var(--txt3);font-size:13px">₹</span>
+        <input class="inp inp-sm" type="number" placeholder="50" min="0"
+          value="${v.price}" style="flex:1"
+          onchange="updateVariantField('${v.id}','price',this.value)"/>
+        <button type="button" class="btn btn-icon-only" onclick="removeVariantRow('${v.id}')" title="Remove">🗑️</button>
+      </div>`).join('');
+  }
+
+  function resetVariantRows() {
+    variantRows = [];
+    renderVariantRows();
+  }
+
+  // ── Margin calculator ──────────────────────────────────────
+  window.calcMargin = function() {
+    const price = parseFloat(document.getElementById('f-price').value) || 0;
+    const cost  = parseFloat(document.getElementById('f-cost').value)  || 0;
+    const el    = document.getElementById('margin-result');
+    if (!price) { el.innerHTML = '— price daalo'; el.className = ''; return; }
+    if (!cost)  { el.innerHTML = '— cost daalo';  el.className = ''; return; }
+    const pct   = Math.round((price - cost) / price * 100);
+    const cls   = pct >= 50 ? 'high' : pct >= 30 ? 'mid' : 'low';
+    el.innerHTML= `<span class="margin-badge ${cls}">${pct}% margin</span>`;
+  };
+
+  // ── Load menu ──────────────────────────────────────────────
+  window.loadMenu = async function() {
+    allItems      = await getMenu();
+    filteredItems = [...allItems];
+    dirtyPrices   = {};
+    markClean();
+    renderStats();
+    renderTable();
+  };
+
+  loadMenu();
+
+  // ── ONE-TIME BULK SEED ──────────────────────────────────────
+  //  Transcribed from the 4 menu-card photos, mapped into the
+  //  8 fixed categories below. Run ONCE — running again will
+  //  create duplicate items (each gets a fresh Date.now() id).
+  // ─────────────────────────────────────────────────────────────
+  const SEED_ITEMS = [
+    // EGG ROLLS → Kathi Roll
+    { name:'Sin Egg Roll', price:60, type:'non-veg', category:'Kathi Roll', emoji:'🥚' },
+    { name:'Dbl Egg Roll', price:70, type:'non-veg', category:'Kathi Roll', emoji:'🥚' },
+    { name:'Triple Egg Roll', price:80, type:'non-veg', category:'Kathi Roll', emoji:'🥚' },
+    { name:'Sin Egg Sin Noodles Roll', price:100, type:'non-veg', category:'Kathi Roll', emoji:'🥚' },
+    { name:'Dbl Egg Dbl Noodles Roll', price:120, type:'non-veg', category:'Kathi Roll', emoji:'🥚' },
+    { name:'Sin Egg Bhurji Roll', price:90, type:'non-veg', category:'Kathi Roll', emoji:'🥚' },
+    { name:'Dbl Egg Bhurji Roll', price:110, type:'non-veg', category:'Kathi Roll', emoji:'🥚' },
+    { name:'Sin Egg Cheese Roll', price:90, type:'non-veg', category:'Kathi Roll', emoji:'🧀' },
+    { name:'Dbl Egg Cheese Roll', price:110, type:'non-veg', category:'Kathi Roll', emoji:'🧀' },
+    { name:'Sin Egg Sin Veggie Roll', price:70, type:'non-veg', category:'Kathi Roll', emoji:'🥚' },
+    { name:'Dbl Egg Dbl Veggie Roll', price:110, type:'non-veg', category:'Kathi Roll', emoji:'🥚' },
+    { name:'Sin Egg Sin Aloo Roll', price:70, type:'non-veg', category:'Kathi Roll', emoji:'🥔' },
+    { name:'Dbl Egg Dbl Aloo Roll', price:110, type:'non-veg', category:'Kathi Roll', emoji:'🥔' },
+    { name:'Sin Egg Sin Paneer Roll', price:120, type:'non-veg', category:'Kathi Roll', emoji:'🧀' },
+    { name:'Sin Egg Dbl Paneer Roll', price:140, type:'non-veg', category:'Kathi Roll', emoji:'🧀' },
+    { name:'Dbl Egg Dbl Paneer Roll', price:160, type:'non-veg', category:'Kathi Roll', emoji:'🧀' },
+    { name:'Sin Egg Sin Mushroom Roll', price:130, type:'non-veg', category:'Kathi Roll', emoji:'🍄' },
+    { name:'Sin Egg Dbl Mushroom Roll', price:150, type:'non-veg', category:'Kathi Roll', emoji:'🍄' },
+    { name:'Dbl Egg Dbl Mushroom Roll', price:170, type:'non-veg', category:'Kathi Roll', emoji:'🍄' },
+    // CHICKEN ROLLS → Kathi Roll
+    { name:'Single Chicken Roll', price:100, type:'non-veg', category:'Kathi Roll', emoji:'🍗' },
+    { name:'Dbl Chicken Roll', price:130, type:'non-veg', category:'Kathi Roll', emoji:'🍗' },
+    { name:'Sin Chicken Cheese Roll', price:120, type:'non-veg', category:'Kathi Roll', emoji:'🧀' },
+    { name:'Sin Egg Sin Chicken Roll', price:110, type:'non-veg', category:'Kathi Roll', emoji:'🍗' },
+    { name:'Sin Egg Dbl Chicken Roll', price:140, type:'non-veg', category:'Kathi Roll', emoji:'🍗' },
+    { name:'Dbl Egg Dbl Chicken Roll', price:150, type:'non-veg', category:'Kathi Roll', emoji:'🍗' },
+    { name:'Sin Chicken Malai Tikka', price:120, type:'non-veg', category:'Kathi Roll', emoji:'🍗' },
+    { name:'Dbl Chicken Malai Tikka', price:150, type:'non-veg', category:'Kathi Roll', emoji:'🍗' },
+    { name:'Sin Chicken Keema Roll', price:130, type:'non-veg', category:'Kathi Roll', emoji:'🍗' },
+    { name:'Dbl Chicken Keema Roll', price:170, type:'non-veg', category:'Kathi Roll', emoji:'🍗' },
+    { name:'Sin Chicken Kathi Roll', price:120, type:'non-veg', category:'Kathi Roll', emoji:'🍗' },
+    { name:'Dbl Chicken Kathi Roll', price:150, type:'non-veg', category:'Kathi Roll', emoji:'🍗' },
+    { name:'Sin Tandoori Chicken Roll', price:120, type:'non-veg', category:'Kathi Roll', emoji:'🍗' },
+    { name:'Dbl Tandoori Chicken Roll', price:150, type:'non-veg', category:'Kathi Roll', emoji:'🍗' },
+    { name:'Sin Chicken Korma Roll', price:130, type:'non-veg', category:'Kathi Roll', emoji:'🍗' },
+    { name:'Dbl Chicken Korma Roll', price:170, type:'non-veg', category:'Kathi Roll', emoji:'🍗' },
+    { name:'Sin Butter Chicken Roll', price:140, type:'non-veg', category:'Kathi Roll', emoji:'🍗' },
+    { name:'Dbl Butter Chicken Roll', price:180, type:'non-veg', category:'Kathi Roll', emoji:'🍗' },
+    // ALOO ROLLS → Kathi Roll
+    { name:'Sin Aloo Roll', price:60, type:'veg', category:'Kathi Roll', emoji:'🥔' },
+    { name:'Dbl Aloo Roll', price:80, type:'veg', category:'Kathi Roll', emoji:'🥔' },
+    { name:'Aloo Cheese Roll', price:90, type:'veg', category:'Kathi Roll', emoji:'🧀' },
+    { name:'Tandoori Aloo Roll (Single)', price:80, type:'veg', category:'Kathi Roll', emoji:'🥔' },
+    { name:'Tandoori Aloo Roll (Double)', price:110, type:'veg', category:'Kathi Roll', emoji:'🥔' },
+    // VEG ROLLS → Kathi Roll
+    { name:'Sin Veg Kathi Roll', price:90, type:'veg', category:'Kathi Roll', emoji:'🌿' },
+    { name:'Sin Veggie Roll', price:60, type:'veg', category:'Kathi Roll', emoji:'🌿' },
+    { name:'Dbl Veggie Roll', price:90, type:'veg', category:'Kathi Roll', emoji:'🌿' },
+    { name:'Sin Veg Cheese Roll', price:70, type:'veg', category:'Kathi Roll', emoji:'🧀' },
+    { name:'Sin Veg Pizza Roll', price:70, type:'veg', category:'Kathi Roll', emoji:'🌿' },
+    { name:'Dbl Veg Pizza Roll', price:110, type:'veg', category:'Kathi Roll', emoji:'🌿' },
+    { name:'Sin Noodles Roll', price:80, type:'veg', category:'Kathi Roll', emoji:'🍜' },
+    { name:'Dbl Noodles Roll', price:100, type:'veg', category:'Kathi Roll', emoji:'🍜' },
+    { name:'Sin Veg Paneer Roll', price:90, type:'veg', category:'Kathi Roll', emoji:'🧀' },
+    { name:'Dbl Veg Paneer Roll', price:110, type:'veg', category:'Kathi Roll', emoji:'🧀' },
+    { name:'Cheese Roll', price:70, type:'veg', category:'Kathi Roll', emoji:'🧀' },
+    { name:'Sin Cheesy Corn Roll', price:90, type:'veg', category:'Kathi Roll', emoji:'🌿' },
+    { name:'Dbl Cheesy Corn Roll', price:110, type:'veg', category:'Kathi Roll', emoji:'🌿' },
+    { name:'Sin Masala Corn Roll', price:80, type:'veg', category:'Kathi Roll', emoji:'🌿' },
+    { name:'Dbl Masala Corn Roll', price:100, type:'veg', category:'Kathi Roll', emoji:'🌿' },
+    // CHAAP ROLLS → Kathi Roll
+    { name:'Sin Afghani Chaap Roll', price:110, type:'veg', category:'Kathi Roll', emoji:'🌿' },
+    { name:'Dbl Afghani Chaap Roll', price:130, type:'veg', category:'Kathi Roll', emoji:'🌿' },
+    { name:'Sin Masala Chaap Roll', price:100, type:'veg', category:'Kathi Roll', emoji:'🌿' },
+    { name:'Dbl Masala Chaap Roll', price:130, type:'veg', category:'Kathi Roll', emoji:'🌿' },
+    { name:'Sin Tandoori Chaap Roll', price:120, type:'veg', category:'Kathi Roll', emoji:'🌿' },
+    { name:'Dbl Tandoori Chaap Roll', price:140, type:'veg', category:'Kathi Roll', emoji:'🌿' },
+    // PANEER ROLLS → Kathi Roll
+    { name:'Sin Paneer Roll', price:100, type:'veg', category:'Kathi Roll', emoji:'🧀' },
+    { name:'Dbl Paneer Roll', price:140, type:'veg', category:'Kathi Roll', emoji:'🧀' },
+    { name:'Sin Paneer Cheese Roll', price:120, type:'veg', category:'Kathi Roll', emoji:'🧀' },
+    { name:'Dbl Paneer Cheese Roll', price:160, type:'veg', category:'Kathi Roll', emoji:'🧀' },
+    { name:'Sin Paneer Butter Masala Roll', price:130, type:'veg', category:'Kathi Roll', emoji:'🧀' },
+    { name:'Dbl Paneer Butter Masala Roll', price:160, type:'veg', category:'Kathi Roll', emoji:'🧀' },
+    { name:'Sin Paneer Pizza Roll', price:130, type:'veg', category:'Kathi Roll', emoji:'🧀' },
+    { name:'Dbl Paneer Pizza Roll', price:160, type:'veg', category:'Kathi Roll', emoji:'🧀' },
+    { name:'Sin Paneer Tikka Roll', price:120, type:'veg', category:'Kathi Roll', emoji:'🧀' },
+    { name:'Dbl Paneer Tikka Roll', price:160, type:'veg', category:'Kathi Roll', emoji:'🧀' },
+    { name:'Sin Paneer Kathi Roll', price:120, type:'veg', category:'Kathi Roll', emoji:'🧀' },
+    { name:'Dbl Paneer Kathi Roll', price:150, type:'veg', category:'Kathi Roll', emoji:'🧀' },
+    { name:'Sin Paneer Bhurji Roll', price:120, type:'veg', category:'Kathi Roll', emoji:'🧀' },
+    { name:'Dbl Paneer Bhurji Roll', price:160, type:'veg', category:'Kathi Roll', emoji:'🧀' },
+    { name:'Sin Paneer Korma Roll', price:120, type:'veg', category:'Kathi Roll', emoji:'🧀' },
+    { name:'Dbl Paneer Korma Roll', price:150, type:'veg', category:'Kathi Roll', emoji:'🧀' },
+    // MUSHROOM ROLLS → Kathi Roll
+    { name:'Sin Mushroom Roll', price:120, type:'veg', category:'Kathi Roll', emoji:'🍄' },
+    { name:'Dbl Mushroom Roll', price:160, type:'veg', category:'Kathi Roll', emoji:'🍄' },
+    { name:'Sin Mushroom Cheese Roll', price:140, type:'veg', category:'Kathi Roll', emoji:'🍄' },
+    { name:'Dbl Mushroom Cheese Roll', price:180, type:'veg', category:'Kathi Roll', emoji:'🍄' },
+    { name:'Sin Mushroom Kathi Roll', price:130, type:'veg', category:'Kathi Roll', emoji:'🍄' },
+    { name:'Dbl Mushroom Kathi Roll', price:170, type:'veg', category:'Kathi Roll', emoji:'🍄' },
+    // MOMOS → Momos
+    { name:'Steam Veg Momos', price:70, type:'veg', category:'Momos', emoji:'🥟' },
+    { name:'Fried Veg Momos', price:90, type:'veg', category:'Momos', emoji:'🥟' },
+    { name:'Steam Paneer Momos', price:100, type:'veg', category:'Momos', emoji:'🥟' },
+    { name:'Fried Paneer Momos', price:120, type:'veg', category:'Momos', emoji:'🥟' },
+    { name:'Kurkure Veg Momos', price:130, type:'veg', category:'Momos', emoji:'🥟' },
+    { name:'Kurkure Paneer Momos', price:160, type:'veg', category:'Momos', emoji:'🥟' },
+    { name:'Gravy Veg Momos', price:140, type:'veg', category:'Momos', emoji:'🥟' },
+    { name:'Gravy Paneer Momos', price:160, type:'veg', category:'Momos', emoji:'🥟' },
+    // EXTRA → Snacks
+    { name:'Mayonnaise', price:10, type:'veg', category:'Snacks', emoji:'🌿' },
+    { name:'Cheese', price:25, type:'veg', category:'Snacks', emoji:'🧀' },
+    { name:'Green Chutney', price:10, type:'veg', category:'Snacks', emoji:'🌿' },
+    { name:'Butter', price:10, type:'veg', category:'Snacks', emoji:'🌿' },
+    { name:'Ketchup Pouch', price:2, type:'veg', category:'Snacks', emoji:'🌿' },
+    { name:'Red Chutney', price:10, type:'veg', category:'Snacks', emoji:'🌿' },
+    // BEVERAGES → Coffee / Shake
+    { name:'Cold Coffee', price:60, type:'veg', category:'Coffee', emoji:'☕' },
+    { name:'Cold Coffee Strong', price:70, type:'veg', category:'Coffee', emoji:'☕' },
+    { name:'Cold Coffee With Vanilla', price:80, type:'veg', category:'Coffee', emoji:'☕' },
+    { name:'Chocolate Shake', price:90, type:'veg', category:'Shake', emoji:'🥤' },
+    { name:'Oreo Shake', price:100, type:'veg', category:'Shake', emoji:'🥤' },
+    { name:'KitKat Shake', price:100, type:'veg', category:'Shake', emoji:'🥤' },
+    { name:'Vanilla Shake', price:90, type:'veg', category:'Shake', emoji:'🥤' },
+    { name:'Butterscotch Shake', price:90, type:'veg', category:'Shake', emoji:'🥤' },
+    { name:'Mirinda Shake', price:90, type:'veg', category:'Shake', emoji:'🥤' },
+    { name:'Virgin Mojito', price:109, type:'veg', category:'Shake', emoji:'🧃' },
+    // CHINESE SNACK → Chinese
+    { name:'Veg Manchurian Dry', price:109, type:'veg', category:'Chinese', emoji:'🍲' },
+    { name:'Paneer Manchurian Dry', price:159, type:'veg', category:'Chinese', emoji:'🍲' },
+    { name:'Chilly Paneer Dry', price:159, type:'veg', category:'Chinese', emoji:'🍲' },
+    { name:'Crispy Corn', price:109, type:'veg', category:'Chinese', emoji:'🍲' },
+    { name:'Chilly Potato', price:109, type:'veg', category:'Chinese', emoji:'🥔' },
+    { name:'Honey Chilly Potato', price:129, type:'veg', category:'Chinese', emoji:'🥔' },
+    { name:'Soyabin Manchurian Dry', price:149, type:'veg', category:'Chinese', emoji:'🍲' },
+    // CHINESE MAIN COURSE → Chinese
+    { name:'Veg Manchurian Gravy', price:149, type:'veg', category:'Chinese', emoji:'🍲' },
+    { name:'Paneer Manchurian Gravy', price:179, type:'veg', category:'Chinese', emoji:'🍲' },
+    { name:'Chilly Paneer Gravy', price:179, type:'veg', category:'Chinese', emoji:'🍲' },
+    { name:'Chilly Mushroom Gravy', price:159, type:'veg', category:'Chinese', emoji:'🍄' },
+    // RICE → Chinese
+    { name:'Veg Fried Rice', price:90, type:'veg', category:'Chinese', emoji:'🍛' },
+    { name:'Schezwan Fried Rice', price:109, type:'veg', category:'Chinese', emoji:'🍛' },
+    { name:'Mushroom Rice', price:129, type:'veg', category:'Chinese', emoji:'🍛' },
+    { name:'Paneer Rice', price:139, type:'veg', category:'Chinese', emoji:'🍛' },
+    { name:'Paneer Schezwan Rice', price:149, type:'veg', category:'Chinese', emoji:'🍛' },
+    { name:'Corn Fry Rice', price:139, type:'veg', category:'Chinese', emoji:'🍛' },
+    { name:'Corn Paneer Mix Rice', price:159, type:'veg', category:'Chinese', emoji:'🍛' },
+    { name:'Fried Rice With Manchurian', price:209, type:'veg', category:'Chinese', emoji:'🍛' },
+    // NOODLES → Chinese
+    { name:'Veg Noodles', price:99, type:'veg', category:'Chinese', emoji:'🍜' },
+    { name:'Veg Manchurian Noodles', price:109, type:'veg', category:'Chinese', emoji:'🍜' },
+    { name:'Paneer Noodles', price:129, type:'veg', category:'Chinese', emoji:'🍜' },
+    { name:'Schezwan Noodles', price:109, type:'veg', category:'Chinese', emoji:'🍜' },
+    { name:'Hakka Noodles', price:109, type:'veg', category:'Chinese', emoji:'🍜' },
+    { name:'Mushroom Noodles', price:139, type:'veg', category:'Chinese', emoji:'🍜' },
+    { name:'Fry Corn Noodles', price:129, type:'veg', category:'Chinese', emoji:'🍜' },
+    { name:'Singapuri Noodles', price:159, type:'veg', category:'Chinese', emoji:'🍜' },
+    { name:'Chilly Garlic Noodles', price:139, type:'veg', category:'Chinese', emoji:'🍜' },
+    { name:'Cheese Noodles', price:159, type:'veg', category:'Chinese', emoji:'🍜' },
+    // PASTA → Chinese
+    { name:'Red Sauce Pasta', price:109, type:'veg', category:'Chinese', emoji:'🍝' },
+    { name:'White Sauce Pasta', price:129, type:'veg', category:'Chinese', emoji:'🍝' },
+    { name:'Cheese Pasta', price:159, type:'veg', category:'Chinese', emoji:'🍝' },
+    // MAGGIE → Snacks
+    { name:'Plain Maggie', price:59, type:'veg', category:'Snacks', emoji:'🍜' },
+    { name:'Plain Cheese Maggie', price:79, type:'veg', category:'Snacks', emoji:'🍜' },
+    { name:'Vegetable Masala Maggie', price:79, type:'veg', category:'Snacks', emoji:'🍜' },
+    { name:'Vegetable Masala Cheese Maggie', price:99, type:'veg', category:'Snacks', emoji:'🍜' },
+    { name:'Paneer Masala Maggie', price:89, type:'veg', category:'Snacks', emoji:'🍜' },
+    { name:'Paneer Cheese Masala Maggie', price:109, type:'veg', category:'Snacks', emoji:'🍜' },
+    // FRENCH FRIES → Snacks
+    { name:'French Fries', price:99, type:'veg', category:'Snacks', emoji:'🍟' },
+    { name:'Peri Peri French Fries', price:120, type:'veg', category:'Snacks', emoji:'🍟' },
+  ];
+
+  window.bulkSeedMenu = async function() {
+    if (!confirm(`${SEED_ITEMS.length} items add karne wale ho. Sirf EK BAAR chalao. Confirm karo?`)) return;
+
+    const btn = document.getElementById('seed-btn');
+    const progEl = document.getElementById('seed-progress');
+    btn.disabled = true;
+    progEl.style.display = 'block';
+
+    let done = 0;
+    for (const it of SEED_ITEMS) {
+      const item = {
+        id: Date.now().toString() + '_' + done,
+        emoji: it.emoji || '🌯',
+        name: it.name,
+        type: it.type,
+        category: it.category,
+        price: it.price,
+        cost: 0,
+        discount: 0,
+        margin: null,
+        showOnApp: true,
+        isBestSeller: false,
+        prepTime: 0,
+        variants: [],
+        available: true,
+        addedAt: new Date().toISOString(),
+      };
+      try {
+        await saveMenuItem(item);
+      } catch (e) {
+        console.warn('seed item failed:', it.name, e.message);
+      }
+      done++;
+      progEl.textContent = `⏳ ${done} / ${SEED_ITEMS.length} items add ho gaye...`;
+    }
+
+    progEl.textContent = `✅ Sab ${done} items add ho gaye! Page refresh ho rahi hai...`;
+    await loadMenu();
+    showToast(`✅ ${done} items menu mein add ho gaye!`);
+    btn.textContent = '✅ Done — yeh button ab hata sakte ho';
+  };
+
+  // ── Stats ──────────────────────────────────────────────────
+  function renderStats() {
+    const total = allItems.length;
+    const avail = allItems.filter(i => i.available !== false).length;
+    const out   = total - avail;
+    const cats  = new Set(allItems.map(i => i.category)).size;
+    setText('s-total', total);
+    setText('s-avail', avail);
+    setText('s-out',   out);
+    setText('s-cats',  cats);
+  }
+
+  // ── Filter ─────────────────────────────────────────────────
+  window.filterMenu = function() {
+    const q    = (document.getElementById('search-inp').value || '').toLowerCase();
+    const cat  = document.getElementById('cat-filter').value;
+    const type = document.getElementById('type-filter').value;
+    const sort = document.getElementById('sort-filter').value;
+    filteredItems = allItems.filter(i => {
+      if (q    && !i.name.toLowerCase().includes(q)) return false;
+      if (cat  && i.category !== cat)                return false;
+      if (type && i.type     !== type)               return false;
+      return true;
+    });
+
+    if (sort) {
+      const marginOf = i => (i.cost && i.price) ? Math.round((i.price - i.cost) / i.price * 100) : -1;
+      if (sort === 'profit-high') filteredItems.sort((a,b) => marginOf(b) - marginOf(a));
+      if (sort === 'profit-low')  filteredItems.sort((a,b) => marginOf(a) - marginOf(b));
+      if (sort === 'price-high')  filteredItems.sort((a,b) => (b.price||0) - (a.price||0));
+      if (sort === 'price-low')   filteredItems.sort((a,b) => (a.price||0) - (b.price||0));
+    }
+
+    renderTable();
+  };
+
+  // ── Render table ───────────────────────────────────────────
+  function renderTable() {
+    const tbody = document.getElementById('menu-tbody');
+    const empty = document.getElementById('menu-empty');
+
+    if (!filteredItems.length) {
+      tbody.innerHTML = '';
+      empty.style.display = 'block';
+      return;
+    }
+    empty.style.display = 'none';
+
+    tbody.innerHTML = filteredItems.map(item => {
+      const avail   = item.available !== false;
+      const margin  = item.cost && item.price
+        ? Math.round((item.price - item.cost) / item.price * 100)
+        : null;
+      const mCls    = margin !== null
+        ? (margin >= 50 ? 'high' : margin >= 30 ? 'mid' : 'low')
+        : '';
+
+      return `
+        <tr id="row-${item.id}">
+          <!-- Item -->
+          <td>
+            <div style="display:flex;align-items:center;gap:10px">
+              <div class="menu-item-emoji">${item.emoji || '🌯'}</div>
+              <div>
+                <div class="item-name">
+                  ${item.name}
+                  ${item.isBestSeller ? '<span style="font-size:10px;font-weight:800;color:#92400e;background:#fef9c3;padding:2px 8px;border-radius:99px;margin-left:6px">⭐ Best Seller</span>' : ''}
+                </div>
+                ${item.prepTime ? '<div class="item-cat">⏱️ ' + item.prepTime + ' mins</div>' : ''}
+                ${item.showOnApp === false
+                  ? '<div class="item-cat" style="color:var(--txt3)">Hidden from app</div>'
+                  : ''}
+              </div>
+            </div>
+          </td>
+
+          <!-- Type -->
+          <td>
+            <div style="display:flex;align-items:center;gap:6px">
+              <span class="veg-dot ${item.type === 'veg' ? 'veg' : 'non-veg'}"></span>
+              <span style="font-size:12px;font-weight:600;color:var(--txt2)">
+                ${item.type === 'veg' ? 'Veg' : 'Non-Veg'}
+              </span>
+            </div>
+          </td>
+
+          <!-- Category -->
+          <td>
+            <span class="badge badge-gray">${item.category || '—'}</span>
+          </td>
+
+          <!-- Price (inline edit) -->
+          <td>
+            <div style="display:flex;align-items:center;gap:4px">
+              <span style="font-size:13px;color:var(--txt3)">₹</span>
+              <input
+                class="price-inp"
+                type="number" min="0"
+                value="${item.price || 0}"
+                onchange="priceChanged('${item.id}', 'price', this.value)"
+              />
+            </div>
+            ${item.variants && item.variants.length
+              ? '<div style="font-size:10.5px;color:var(--txt3);margin-top:4px">' +
+                item.variants.map(v => v.name + ': ₹' + v.price).join(' · ') +
+                '</div>'
+              : ''}
+          </td>
+
+          <!-- Discount (inline edit) -->
+          <td class="hide-sm">
+            <div style="display:flex;align-items:center;gap:4px">
+              <input
+                class="disc-inp"
+                type="number" min="0" max="100"
+                value="${item.discount || 0}"
+                onchange="priceChanged('${item.id}', 'disc', this.value)"
+              />
+              <span style="font-size:12px;color:var(--txt3)">%</span>
+            </div>
+          </td>
+
+          <!-- Margin -->
+          <td class="hide-sm">
+            ${margin !== null
+              ? `<span class="margin-badge ${mCls}">${margin}%</span>`
+              : '<span style="color:var(--txt3);font-size:12px">— cost daalo</span>'}
+          </td>
+
+          <!-- Available toggle -->
+          <td>
+            <div class="avail-cell">
+              <label class="toggle-wrap">
+                <input
+                  type="checkbox"
+                  ${avail ? 'checked' : ''}
+                  onchange="toggleAvail('${item.id}', this.checked)"
+                />
+                <span class="toggle-sl"></span>
+              </label>
+              <span class="avail-lbl" style="color:${avail ? 'var(--green)' : 'var(--red)'}">
+                ${avail ? 'Available' : 'Out of Stock'}
+              </span>
+            </div>
+          </td>
+
+          <!-- Actions -->
+          <td>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-icon-only"
+                onclick="toggleItemBestSeller('${item.id}', ${!item.isBestSeller})"
+                title="${item.isBestSeller ? 'Remove Best Seller badge' : 'Mark as Best Seller'}"
+                style="${item.isBestSeller ? 'color:#ca8a04' : ''}">
+                ⭐
+              </button>
+              <button class="btn btn-icon-only"
+                onclick="deleteItem('${item.id}', '${item.name.replace(/'/g,'\\u0027')}')"
+                title="Delete">
+                🗑️
+              </button>
+            </div>
+          </td>
+        </tr>`;
+    }).join('');
+  }
+
+  // ── Add new item ───────────────────────────────────────────
+  window.addItem = async function() {
+    const errEl = document.getElementById('add-err');
+    errEl.style.display = 'none';
+    const name  = document.getElementById('f-name').value.trim();
+    const price = parseFloat(document.getElementById('f-price').value) || 0;
+    if (!name)  { showErr('Item name zaroor daalo'); return; }
+    if (!price) { showErr('Price zaroor daalo'); return; }
+
+    const cost = parseFloat(document.getElementById('f-cost').value) || 0;
+    const disc = parseFloat(document.getElementById('f-disc').value) || 0;
+    const margin = cost && price
+      ? Math.round((price - cost) / price * 100)
+      : null;
+
+    const item = {
+      id:        Date.now().toString(),
+      emoji:     selEmoji,
+      name,
+      type:      selType,
+      category:  document.getElementById('f-cat').value,
+      price,
+      cost,
+      discount:  disc,
+      margin,
+      showOnApp: document.getElementById('f-show').value === '1',
+      isBestSeller: isBestSeller,
+      prepTime: parseInt(document.getElementById('f-preptime').value) || 0,
+      variants: variantRows
+        .filter(v => v.name.trim() && parseFloat(v.price) > 0)
+        .map(v => ({ name: v.name.trim(), price: parseFloat(v.price) })),
+      available: true,
+      addedAt:   new Date().toISOString(),
+    };
+
+    const btn = document.getElementById('add-btn');
+    btn.disabled = true; btn.textContent = '⏳ Saving...';
+
+    try {
+      await saveMenuItem(item);
+      allItems.unshift(item);
+      filterMenu();
+      renderStats();
+      // Reset form
+      document.getElementById('f-name').value  = '';
+      document.getElementById('f-price').value = '';
+      document.getElementById('f-cost').value  = '';
+      document.getElementById('f-disc').value  = '0';
+      document.getElementById('f-preptime').value = '';
+      resetVariantRows();
+      selEmoji = '🌯';
+      document.getElementById('emoji-preview').textContent = '🌯';
+      setType('veg');
+      isBestSeller = false;
+      document.getElementById('btn-bestseller').classList.remove('on');
+      document.getElementById('margin-result').innerHTML = '— daalo toh dikhega';
+      showToast('✅ ' + item.name + ' menu mein add ho gaya!');
+    } catch (e) {
+      showErr('Save nahi hua: ' + e.message);
+    } finally {
+      btn.disabled = false; btn.textContent = '🏷️ Add to Menu';
+    }
+  };
+
+  // ── Toggle availability ────────────────────────────────────
+  window.toggleAvail = async function(id, available) {
+    // Optimistic update
+    const idx = allItems.findIndex(i => i.id === id);
+    if (idx !== -1) allItems[idx].available = available;
+    filterMenu();
+    renderStats();
+
+    try {
+      await saveMenuItem({ id, available });
+      showToast(available ? '✅ Available mark kiya!' : '❌ Out of Stock mark kiya!');
+    } catch (e) {
+      showToast('❌ Save failed');
+    }
+  };
+
+  // ── Toggle Best Seller badge on existing item ──────────────
+  window.toggleItemBestSeller = async function(id, isBestSeller) {
+    const idx = allItems.findIndex(i => i.id === id);
+    if (idx !== -1) allItems[idx].isBestSeller = isBestSeller;
+    filterMenu();
+
+    try {
+      await saveMenuItem({ id, isBestSeller });
+      showToast(isBestSeller ? '⭐ Best Seller badge laga diya!' : 'Best Seller badge hata diya');
+    } catch (e) {
+      showToast('❌ Save failed');
+    }
+  };
+
+  // ── Bulk Status Toggle ──────────────────────────────────────
+  window.bulkSetAvailability = async function(available) {
+    const cat = document.getElementById('bulk-cat').value;
+    if (!cat) { showToast('Pehle category chuno'); return; }
+
+    const matching = allItems.filter(i => i.category === cat);
+    if (!matching.length) { showToast('Iss category mein koi item nahi hai'); return; }
+
+    if (!confirm(`"${cat}" ke ${matching.length} item(s) ko ${available ? 'Available' : 'Out of Stock'} mark karna hai?`)) return;
+
+    try {
+      await Promise.all(matching.map(i => saveMenuItem({ id: i.id, available })));
+      matching.forEach(i => { const idx = allItems.findIndex(a => a.id === i.id); if (idx !== -1) allItems[idx].available = available; });
+      filterMenu();
+      renderStats();
+      showToast(`✅ ${matching.length} "${cat}" item(s) ${available ? 'Available' : 'Out of Stock'} mark ho gaye!`);
+    } catch (e) {
+      showToast('❌ Bulk update failed: ' + e.message);
+    }
+  };
+
+  // ── Inline price / discount edit ──────────────────────────
+  window.priceChanged = function(id, field, value) {
+    if (!dirtyPrices[id]) dirtyPrices[id] = {};
+    dirtyPrices[id][field] = parseFloat(value) || 0;
+    markDirty();
+  };
+
+  window.saveAllPrices = async function() {
+    const ids = Object.keys(dirtyPrices);
+    if (!ids.length) { showToast('Koi changes nahi'); return; }
+
+    const btn = document.getElementById('save-btn');
+    btn.disabled = true; btn.textContent = '⏳ Saving...';
+
+    try {
+      await Promise.all(ids.map(id => {
+        const item = allItems.find(i => i.id === id);
+        if (!item) return;
+        const updates = { id };
+        if (dirtyPrices[id].price !== undefined) {
+          updates.price = dirtyPrices[id].price;
+          item.price    = dirtyPrices[id].price;
+        }
+        if (dirtyPrices[id].disc !== undefined) {
+          updates.discount = dirtyPrices[id].disc;
+          item.discount    = dirtyPrices[id].disc;
+        }
+        return saveMenuItem({ ...item, ...updates });
+      }));
+      dirtyPrices = {};
+      markClean();
+      showToast(`✅ ${ids.length} item(s) ke prices save ho gaye!`);
+      renderTable();
+    } catch (e) {
+      showToast('❌ Save failed: ' + e.message);
+    } finally {
+      btn.disabled = false; btn.textContent = '💾 Save Price Changes';
+    }
+  };
+
+  // ── Delete item ────────────────────────────────────────────
+  window.deleteItem = async function(id, name) {
+    if (!confirm(`"${name}" menu se delete karna chahte ho?`)) return;
+    try {
+      await deleteMenuItem(id);
+      allItems = allItems.filter(i => i.id !== id);
+      filterMenu();
+      renderStats();
+      showToast('✅ Item delete ho gaya');
+    } catch (e) {
+      showToast('❌ Delete failed');
+    }
+  };
+
+  // ── Dirty tracking ─────────────────────────────────────────
+  function markDirty() {
+    const el = document.getElementById('save-msg');
+    const ids = Object.keys(dirtyPrices).length;
+    el.textContent = `⚠️ ${ids} item(s) ke unsaved price changes hain`;
+    el.className   = 'save-msg err';
+  }
+  function markClean() {
+    const el = document.getElementById('save-msg');
+    el.textContent = 'Koi unsaved price changes nahi';
+    el.className   = 'save-msg';
+  }
+
+  // ── Helpers ────────────────────────────────────────────────
+  function showErr(msg) {
+    const e = document.getElementById('add-err');
+    e.textContent   = '❌ ' + msg;
+    e.style.display = 'block';
+  }
+  function setText(id, val) {
+    const e = document.getElementById(id); if (e) e.textContent = val;
+  }
+  function showToast(msg, dur = 2800) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), dur);
+  }
+</script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

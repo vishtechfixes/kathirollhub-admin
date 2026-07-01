@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="../css/admin.css"/>
+  <style>
+    body { background: var(--bg); margin: 0; padding: 0; }
+    .page { padding: 24px 20px 60px; max-width: 960px; }
+
+    /* Welcome strip */
+    .welcome-strip {
+      background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%);
+      border-radius: var(--r-xl); padding: 22px 24px;
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 20px; flex-wrap: wrap; gap: 12px;
+    }
+    .ws-left h2 { font-size: 20px; font-weight: 800; color: #fff; margin-bottom: 4px; }
+    .ws-left p  { font-size: 13px; color: #94a3b8; }
+    .ws-right { display: flex; gap: 8px; }
+    .ws-badge {
+      display: flex; align-items: center; gap: 6px;
+      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);
+      border-radius: var(--r-sm); padding: 7px 14px;
+      font-size: 12px; font-weight: 600; color: #94a3b8;
+    }
+    .live-dot2 { width:7px;height:7px;background:var(--green);border-radius:50%;animation:blink 1.2s ease-in-out infinite; }
+
+    /* Stat cards */
+    .stat-grid-4 { display: grid; grid-template-columns: repeat(2,1fr); gap: 12px; margin-bottom: 20px; }
+    @media(min-width:640px){ .stat-grid-4 { grid-template-columns: repeat(4,1fr); } }
+    .sc {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--r-lg); padding: 18px;
+      box-shadow: var(--shadow-sm); position: relative; overflow: hidden;
+    }
+    .sc-bar { position:absolute;top:0;left:0;right:0;height:3px;border-radius:4px 4px 0 0; }
+    .sc .ic { font-size:24px; margin-bottom:12px; display:block; }
+    .sc .vl { font-size:30px;font-weight:800;color:var(--txt);line-height:1;margin-bottom:5px; }
+    .sc .lb { font-size:12px;color:var(--txt2);font-weight:600; }
+    .sc .sb { font-size:11px;color:var(--txt3);margin-top:4px; }
+    .sc .tr { font-size:12px;font-weight:700;margin-top:8px; }
+    .sc .tr.up{color:var(--green)} .sc .tr.dn{color:var(--red)}
+
+    /* Two-col */
+    .two-col { display:grid;grid-template-columns:1fr;gap:16px;margin-bottom:16px; }
+    @media(min-width:720px){ .two-col { grid-template-columns: 1.4fr 1fr; } }
+
+    /* Bar chart */
+    .chart-area { height:160px;display:flex;align-items:flex-end;gap:8px;padding:8px 0 0; }
+    .bar-col  { flex:1;display:flex;flex-direction:column;align-items:center;gap:5px; }
+    .bar-body {
+      width:100%;border-radius:6px 6px 0 0;background:var(--blue);
+      min-height:4px;position:relative;transition:height .6s ease;cursor:pointer;
+    }
+    .bar-today .bar-body { background:var(--yellow); }
+    .bar-tip {
+      position:absolute;top:-28px;left:50%;transform:translateX(-50%);
+      background:var(--txt);color:var(--card);
+      font-size:10px;font-weight:700;padding:3px 7px;border-radius:5px;
+      white-space:nowrap;opacity:0;transition:opacity .15s;pointer-events:none;
+    }
+    .bar-body:hover .bar-tip { opacity:1; }
+    .bar-day { font-size:10px;color:var(--txt3);font-weight:600; }
+
+    /* Activity */
+    .act-item { display:flex;align-items:flex-start;gap:12px;padding:11px 0;border-bottom:1px solid var(--border); }
+    .act-item:last-child { border-bottom:none; }
+    .act-ico { width:34px;height:34px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:15px; }
+    .ico-join{background:#dbeafe} .ico-bill{background:#f3e8ff} .ico-pts{background:#fef9c3} .ico-visit{background:#dcfce7}
+    .act-ttl { font-size:13px;font-weight:600;color:var(--txt);margin-bottom:2px; }
+    .act-t   { font-size:11px;color:var(--txt3); }
+
+    /* Top */
+    .top-row { display:flex;align-items:center;padding:10px 0;border-bottom:1px solid var(--border); }
+    .top-row:last-child{border-bottom:none}
+    .top-rank { font-size:17px;font-weight:800;color:var(--txt3);width:28px;flex-shrink:0; }
+
+    /* Quick actions */
+    .qa-grid { display:grid;grid-template-columns:repeat(2,1fr);gap:8px; }
+    @media(min-width:480px){ .qa-grid { grid-template-columns:repeat(4,1fr); } }
+    .qa-btn {
+      display:flex;flex-direction:column;align-items:center;gap:6px;
+      background:var(--bg);border:1.5px solid var(--border);
+      border-radius:var(--r-md);padding:14px 8px;cursor:pointer;
+      font-family:var(--font);transition:all .15s;
+    }
+    .qa-btn:hover { border-color:var(--blue);background:#eff6ff; }
+    .qa-ico { font-size:22px; }
+    .qa-lbl { font-size:12px;font-weight:700;color:var(--txt2); }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Welcome -->
+  <div class="welcome-strip">
+    <div class="ws-left">
+      <h2 id="greet-h">Good Morning, Admin! ☀️</h2>
+      <p  id="greet-s">Kathi Roll Hub — Murlipura, Jaipur</p>
+    </div>
+    <div class="ws-right">
+      <div class="ws-badge"><span class="live-dot2"></span>Live</div>
+      <div class="ws-badge" id="today-lbl"></div>
+    </div>
+  </div>
+
+  <!-- Stat cards -->
+  <div class="stat-grid-4" id="stat-grid"></div>
+
+  <!-- QR Scan tracking -->
+  <div class="card" id="qr-card" style="margin-bottom:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="toggleQrList()">
+      <div class="card-title" style="margin-bottom:0"><span class="ct-icon">📱</span> QR Code Se Aaye Customers</div>
+      <span id="qr-toggle-arrow" style="font-size:13px;color:var(--txt3);transition:transform .2s">▼</span>
+    </div>
+    <div style="display:flex;gap:20px;margin-top:12px">
+      <div>
+        <div style="font-size:26px;font-weight:800;color:var(--txt)" id="qr-today-count">0</div>
+        <div style="font-size:11px;color:var(--txt3);font-weight:700">Aaj QR Se Aaye</div>
+      </div>
+      <div>
+        <div style="font-size:26px;font-weight:800;color:var(--txt)" id="qr-total-count">0</div>
+        <div style="font-size:11px;color:var(--txt3);font-weight:700">Total QR Se Aaye</div>
+      </div>
+    </div>
+    <div id="qr-list" style="display:none;margin-top:14px"></div>
+  </div>
+ 
+  <!-- Chart + Top customers -->
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title"><span class="ct-icon">📈</span> New Customers — 7 Din</div>
+      <div class="chart-area" id="chart-area"></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="ct-icon">🏆</span> Top Customers</div>
+      <div id="top-custs"></div>
+    </div>
+  </div>
+
+  <!-- Activity + Quick actions -->
+  <div class="two-col">
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div class="card-title" style="margin-bottom:0"><span class="ct-icon">⚡</span> Recent Activity</div>
+        <button class="btn btn-ghost btn-sm" onclick="refresh()">↻ Refresh</button>
+      </div>
+      <div id="activity-feed"></div>
+    </div>
+
+    <div>
+      <!-- Quick actions -->
+      <div class="card">
+        <div class="card-title"><span class="ct-icon">🚀</span> Quick Actions</div>
+        <div class="qa-grid">
+          <div class="qa-btn"   onclick="window.location.href='billing.html'" onclick="nav('billing','🧾  billing.html')"><span class="qa-ico">🧾</span><span class="qa-lbl">New Bill</span></div>
+          <div class="qa-btn"  onclick="window.location.href='customers.html'"    onclick="nav('customers','👥 Customers')"><span class="qa-ico">👥</span><span class="qa-lbl">Customers</span></div>
+          <div class="qa-btn"   onclick="window.location.href='alerts.html'"             onclick="nav('alerts','🚨 Alerts')"><span class="qa-ico">🚨</span><span class="qa-lbl">Alerts</span></div>
+          <div class="qa-btn"  onclick="window.location.href='rewards.html'"    onclick="nav('rewards','🎁 Rewards')"><span class="qa-ico">🎁</span><span class="qa-lbl">Offers</span></div>
+          <div class="qa-btn"   onclick="window.location.href='points.html'"    onclick="nav('points','⭐ Points')"><span class="qa-ico">⭐</span><span class="qa-lbl">Points</span></div>
+          <div class="qa-btn"   onclick="window.location.href='stock.html'" onclick="nav('stock','📦 Stock')"><span class="qa-ico">📦</span><span class="qa-lbl">Stock</span></div>
+          <div class="qa-btn" onclick="window.location.href='export.html'"   onclick="nav('export','📥 Export')"><span class="qa-ico">📥</span><span class="qa-lbl">Export</span></div>
+          <div class="qa-btn"   onclick="window.location.href='settings.html'" onclick="nav('settings','⚙️ Settings')"><span class="qa-ico">⚙️</span><span class="qa-lbl">Settings</span></div>
+        </div>
+      </div>
+      <!-- Today payment split -->
+      <div class="card" style="margin-bottom:0">
+        <div class="card-title"><span class="ct-icon">💳</span> Aaj Payment Split</div>
+        <div id="pay-split"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script type="module">
+  import { getAllUsers, getAllBills, fmtDate } from '../js/admin.js';
+
+  let users = [], bills = [];
+
+  async function init() {
+    setMeta();
+    [users, bills] = await Promise.all([getAllUsers(), getAllBills()]);
+    render();
+    setInterval(async () => {
+      [users, bills] = await Promise.all([getAllUsers(), getAllBills()]);
+      render();
+    }, 8000);
+  }
+
+  function render() {
+    renderStats();
+    renderQrStats();
+    renderChart();
+    renderTop();
+    renderActivity();
+    renderPaySplit();
+  }
+
+  function setMeta() {
+    const hr = new Date().getHours();
+    const g  = hr<12?'Good Morning ☀️':hr<17?'Good Afternoon 🌤️':'Good Evening 🌙';
+    document.getElementById('greet-h').textContent = `${g}, Admin!`;
+    document.getElementById('today-lbl').textContent =
+      new Date().toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short'});
+    const sh = JSON.parse(localStorage.getItem('krh_shop')||'{}');
+    if (sh.name) document.getElementById('greet-s').textContent =
+      sh.name + (sh.loc ? ' — ' + sh.loc : '');
+  }
+
+  function renderStats() {
+    const today  = new Date().toDateString();
+    const yest   = new Date(); yest.setDate(yest.getDate()-1);
+    const tb     = bills.filter(b => new Date(b.time).toDateString() === today);
+    const yb     = bills.filter(b => new Date(b.time).toDateString() === yest.toDateString());
+    const rev    = tb.reduce((a,b)=>a+(b.final||0),0);
+    const yrev   = yb.reduce((a,b)=>a+(b.final||0),0);
+    const disc   = tb.reduce((a,b)=>a+(b.discount||0),0);
+    const totalP = users.reduce((a,u)=>a+(u.points||0),0);
+    const newTod = users.filter(u=>new Date(u.joined).toDateString()===today).length;
+    const rd     = yrev>0 ? Math.round(((rev-yrev)/yrev)*100) : 0;
+
+    document.getElementById('stat-grid').innerHTML = `
+      <div class="sc"><div class="sc-bar" style="background:var(--blue)"></div>
+        <span class="ic">👥</span><div class="vl">${users.length}</div>
+        <div class="lb">Total Members</div><div class="sb">+${newTod} aaj</div></div>
+      <div class="sc"><div class="sc-bar" style="background:var(--green)"></div>
+        <span class="ic">🧾</span><div class="vl">${tb.length}</div>
+        <div class="lb">Aaj Bills</div>
+        <div class="tr ${rd>=0?'up':'dn'}">${rd>=0?'↑':'↓'} ${Math.abs(rd)}% vs kal</div></div>
+      <div class="sc"><div class="sc-bar" style="background:#ca8a04"></div>
+        <span class="ic">💰</span><div class="vl">₹${rev}</div>
+        <div class="lb">Aaj Revenue</div><div class="sb">Discount: ₹${disc}</div></div>
+      <div class="sc"><div class="sc-bar" style="background:#9333ea"></div>
+        <span class="ic">⭐</span><div class="vl">${(totalP/1000).toFixed(1)}k</div>
+        <div class="lb">Total Points</div><div class="sb">Distributed</div></div>`;
+  }
+
+  function renderQrStats() {
+    const today = new Date().toDateString();
+    const qrUsers = users.filter(u => u.joinSource === 'qr');
+    const qrToday = qrUsers.filter(u => new Date(u.joined).toDateString() === today);
+
+    document.getElementById('qr-today-count').textContent = qrToday.length;
+    document.getElementById('qr-total-count').textContent = qrUsers.length;
+
+    const listEl = document.getElementById('qr-list');
+    if (!qrUsers.length) {
+      listEl.innerHTML = '<div style="font-size:12.5px;color:var(--txt3);text-align:center;padding:14px">Abhi tak koi QR se nahi aaya</div>';
+      return;
+    }
+    const sorted = [...qrUsers].sort((a,b) => new Date(b.joined) - new Date(a.joined));
+    listEl.innerHTML = sorted.map(u => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)">
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--txt)">${u.name}</div>
+          <div style="font-size:11px;color:var(--txt3)">${u.mobile}</div>
+        </div>
+        <div style="font-size:11px;color:var(--txt3);font-weight:600">${fmtDate(u.joined)}</div>
+      </div>`).join('');
+  }
+
+  window.toggleQrList = function() {
+    const listEl  = document.getElementById('qr-list');
+    const arrowEl = document.getElementById('qr-toggle-arrow');
+    const isOpen  = listEl.style.display !== 'none';
+    listEl.style.display = isOpen ? 'none' : 'block';
+    arrowEl.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+  };
+
+  function renderChart() {
+    const days = Array.from({length:7},(_,i)=>{
+      const d=new Date(); d.setDate(d.getDate()-(6-i));
+      return { d, lbl:d.toLocaleDateString('en-IN',{weekday:'short'}), n:0, today:i===6 };
+    });
+    users.forEach(u=>{
+      if(!u.joined)return;
+      const jd=new Date(u.joined).toDateString();
+      const slot=days.find(x=>x.d.toDateString()===jd);
+      if(slot)slot.n++;
+    });
+    const mx=Math.max(...days.map(d=>d.n),1);
+    document.getElementById('chart-area').innerHTML=days.map(d=>`
+      <div class="bar-col${d.today?' bar-today':''}">
+        <div class="bar-body" style="height:${Math.round((d.n/mx)*140)}px">
+          <div class="bar-tip">${d.n} new</div>
+        </div>
+        <div class="bar-day">${d.lbl}</div>
+      </div>`).join('');
+  }
+
+  function renderTop() {
+    const top=[...users].sort((a,b)=>(b.visits||0)-(a.visits||0)).slice(0,5);
+    const medals=['🥇','🥈','🥉','4','5'];
+    document.getElementById('top-custs').innerHTML=top.length?top.map((u,i)=>`
+      <div class="top-row">
+        <div class="top-rank">${medals[i]}</div>
+        <div style="flex:1;margin-left:10px;min-width:0">
+          <div style="font-size:13px;font-weight:700;color:var(--txt);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${u.name}</div>
+          <div style="font-size:11px;color:var(--txt3)">${u.mobile}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:14px;font-weight:800;color:#ca8a04">${u.visits||0}</div>
+          <div style="font-size:11px;color:var(--txt3)">visits</div>
+        </div>
+      </div>`).join('')
+    :'<div style="padding:20px;text-align:center;color:var(--txt3)">Koi data nahi</div>';
+  }
+
+  function renderActivity() {
+    const events=[];
+    [...users].sort((a,b)=>new Date(b.joined)-new Date(a.joined)).slice(0,6)
+      .forEach(u=>events.push({cls:'ico-join',ico:'👤',ttl:`<b>${u.name}</b> ne register kiya`,t:u.joined}));
+    [...bills].slice(0,8)
+      .forEach(b=>events.push({cls:'ico-bill',ico:'🧾',ttl:`<b>${b.name}</b> ka ₹${b.final} bill`,t:b.time}));
+    events.sort((a,b)=>new Date(b.t)-new Date(a.t));
+    document.getElementById('activity-feed').innerHTML=events.slice(0,10).map(e=>`
+      <div class="act-item">
+        <div class="act-ico ${e.cls}">${e.ico}</div>
+        <div><div class="act-ttl">${e.ttl}</div><div class="act-t">${ago(e.t)}</div></div>
+      </div>`).join('')||'<div style="padding:24px;text-align:center;color:var(--txt3)">Koi activity nahi</div>';
+  }
+
+  function renderPaySplit() {
+    const today=new Date().toDateString();
+    const tb=bills.filter(b=>new Date(b.time).toDateString()===today);
+    const rows=[['💵 Cash','cash','#ca8a04'],['📲 UPI','upi','#1d4ed8'],['💳 Card','card','#7c3aed'],['🎁 Discount','_disc','#dc2626']];
+    document.getElementById('pay-split').innerHTML=`<div style="display:flex;flex-direction:column;gap:2px">`+
+      rows.map(([lbl,key,clr])=>{
+        const v=key==='_disc'?tb.reduce((a,b)=>a+(b.discount||0),0):tb.filter(b=>b.payment===key).reduce((a,b)=>a+(b.final||0),0);
+        return `<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)">
+          <span style="font-size:13px;color:var(--txt2);font-weight:600">${lbl}</span>
+          <span style="font-size:15px;font-weight:800;color:${clr}">₹${v}</span></div>`;
+      }).join('')+'</div>';
+  }
+
+  function ago(iso) {
+    const s=Math.floor((Date.now()-new Date(iso))/1000);
+    if(s<60)return'Abhi abhi';
+    if(s<3600)return Math.floor(s/60)+' min pehle';
+    if(s<86400)return Math.floor(s/3600)+' ghante pehle';
+    return fmtDate(iso);
+  }
+
+  function nav(name, title) {
+    try { parent.loadPage(name, title); } catch(e) { console.log('nav:', name); }
+  }
+
+  window.refresh = async function() {
+    [users, bills] = await Promise.all([getAllUsers(), getAllBills()]);
+    render();
+  };
+
+  init();
+</script>
+</body>
+</html>
